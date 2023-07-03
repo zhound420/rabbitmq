@@ -1,5 +1,6 @@
 # RabbitMQ toolkit for SuperAGI
- A toolkit that enables natural language communication between agents using RabbitMQ as a messaging broker
+ A toolkit that enables natural language communication between agents using RabbitMQ as a messaging broker.
+This is a toolkit for https://github.com/TransformerOptimus/SuperAGI
 
 1. <b>Natural Language Communication:</b> The toolkit is capable of sending and receiving messages in natural language. This is done by encoding the messages as JSON objects, which include the sender, receiver, timestamp, type, and content of the message.
 2. <b>Message Prioritization:</b> The toolkit supports prioritizing messages. When sending a message, you can specify a priority level. Messages with higher priority levels are delivered before those with lower priority levels.
