@@ -26,5 +26,3 @@ We believe in the power of collaboration and we're excited to see how the commun
 - **Developers**: Help us enhance the functionality of the toolkit. Check out the "Future Improvements" section for inspiration.
 - **Users**: Use the toolkit and provide us with feedback on your experience. Your insights are invaluable in helping us improve.
 - **AI Enthusiasts**: Share your ideas on how we can make the toolkit better. We're always open to fresh perspectives.
-
-Check out our [contributing guide](CONTRIBUTING.md) for more information on how to get started. We look forward to collaborating with you!
