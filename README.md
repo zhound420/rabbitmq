@@ -27,8 +27,4 @@ The integration of the RabbitMQ toolkit with the SuperAGI codebase opens up a wi
 
 ## Join the Community
 
-We believe in the power of collaboration and we're excited to see how the community can improve this toolkit. Whether you're a developer, a user, or just someone interested in AI, there are many ways to contribute. 
-
-- **Developers**: Help us enhance the functionality of the toolkit. Check out the "Future Improvements" section for inspiration.
-- **Users**: Use the toolkit and provide us with feedback on your experience. Your insights are invaluable in helping us improve.
-- **AI Enthusiasts**: Share your ideas on how we can make the toolkit better. We're always open to fresh perspectives.
+We believe in the power of collaboration and we're excited to see how the community can improve this toolkit. Whether you're a developer, a user, or just someone interested in AI, there are many ways to contribute.
