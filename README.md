@@ -18,7 +18,7 @@ Welcome to the RabbitMQ Toolkit for the [SuperAGI](https://github.com/Transforme
 The integration of the RabbitMQ toolkit with the SuperAGI codebase opens up a wide range of possibilities for enhancing AI capabilities:
 
 - **Collaborative Problem Solving:** Multiple AI agents can work together, leveraging their specialized knowledge or capabilities to solve complex problems.
-- **Multi LLM collaboration:** Agents could be of combination of OpenAI and opensource models.
+- **Multi LLM collaboration:** Agents could be a combination of OpenAI and opensource models.
   
 ## Future Improvements
 
