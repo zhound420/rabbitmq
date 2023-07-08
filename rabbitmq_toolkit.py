@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import List
-from superagi.tools.base_tool import BaseTool, BaseToolkit
+from superagi.tools.base_tool import BaseToolkit, BaseTool
 from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 
 class RabbitMQToolkit(BaseToolkit, ABC):
