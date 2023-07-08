@@ -6,7 +6,7 @@ import os
 import logging
 import datetime
 import json
-from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
+from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQTool(BaseTool, ABC):
     name = "RabbitMQ Tool"
