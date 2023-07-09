@@ -1,7 +1,7 @@
 from superagi.tools.rabbitmq.rabbitmq_toolkit import RabbitMQTool
 
 # Create an instance of the class
-tool = RabbitMQTool()
+tool = BaseRabbitMQTool()
 
 # Check that the attributes are correctly initialized
 assert tool.rabbitmq_server == 'localhost', f'Expected rabbitmq_server to be localhost, but got {tool.rabbitmq_server}'
