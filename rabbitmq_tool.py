@@ -26,29 +26,27 @@ class RabbitMQTool(BaseTool, BaseModel):
         tool_input = kwargs.get("tool_input", {})
         # Check if tool_input is a string and try to load it as a JSON object
         if isinstance(tool_input, str):
+            # If it's a string, treat it as a message to be sent
+            tool_input = {
+                "operation": "send_message",
+                "receiver": "Linda",  # This is a placeholder; ideally, this should be determined dynamically
+                "content": tool_input
+            }
+        else:
             try:
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
                 raise ValueError(f"Invalid JSON string in tool_input: {tool_input}")
 
         operation = tool_input.get("operation")
-        tool_args = tool_input
-
         if operation == "send_message":
-            if not tool_args or "receiver" not in tool_args or "content" not in tool_args:
-                raise ValueError("Incomplete tool args: 'receiver' and 'content' are required for send_message operation.")
-            receiver = tool_args["receiver"]
-            content = tool_args["content"]
-            msg_type = tool_args.get("msg_type", "text")
-            priority = tool_args.get("priority", 0)
-            return self._execute_send(receiver, json.dumps(content), priority=priority)
-
+            receiver = tool_input.get("receiver")
+            content = tool_input.get("content")
+            priority = tool_input.get("priority", 0)
+            return self.send_message(receiver, content, priority=priority)
         elif operation == "receive_message":
-            if not tool_args or "queue_name" not in tool_args:
-                raise ValueError("Incomplete tool args: 'queue_name' is required for receive_message operation.")
-            queue_name = tool_args["queue_name"]
-            return self._execute_receive(queue_name)
-
+            queue_name = tool_input.get("queue_name")
+            return self.receive_message(queue_name)
         else:
             raise ValueError(f"Unknown operation: '{operation}'")
 
@@ -86,3 +84,4 @@ class RabbitMQTool(BaseTool, BaseModel):
         raw_message = self._execute_receive(queue_name)
         message = json.loads(raw_message)
         return message["content"]
+"""
