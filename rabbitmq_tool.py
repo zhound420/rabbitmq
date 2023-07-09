@@ -19,35 +19,27 @@ class RabbitMQTool(BaseTool, BaseModel):
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
-    def _execute(self, *args, **kwargs):
+    def _execute(self, operation, args):
         """
-        Placeholder for the _execute method.
+        Executes the desired operation.
         """
-        raise NotImplementedError("Each subclass must implement its own _execute method.")
+        if operation == "send_message":
+            if "receiver" not in args or "content" not in args:
+                raise ValueError("Incomplete tool args: 'receiver' and 'content' are required for send_message operation.")
+            receiver = args["receiver"]
+            content = args["content"]
+            msg_type = args.get("msg_type", "text")
+            priority = args.get("priority", 0)
+            return self.send_message(receiver, content, msg_type, priority)
 
-    def _execute_send(self, receiver, message, persistent=False, priority=0):
-        """
-        Execute a RabbitMQ send operation.
-        """
-        if receiver is None or message is None:
-            # Handle the case when receiver or message is None
-            return "Receiver or message is not provided"
+        elif operation == "receive_message":
+            if "queue_name" not in args:
+                raise ValueError("Incomplete tool args: 'queue_name' is required for receive_message operation.")
+            queue_name = args["queue_name"]
+            return self.receive_message(queue_name)
+
         else:
-            connection = RabbitMQConnection(self.connection_params, "send", receiver, message, persistent, priority)
-            return connection.run()
-
-    def _execute_receive(self, queue_name):
-        """
-        Execute a RabbitMQ receive operation.
-        """
-        if queue_name is None:
-            # Handle the case when queue_name is None
-            return "Queue name is not provided"
-        else:
-            connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
-            return connection.run()
-
-    # ... Similarly, define _execute methods for other operations ...
+            raise ValueError(f"Unknown operation: '{operation}'")
 
     def send_message(self, receiver, content, msg_type="text", priority=0):
         """
@@ -67,10 +59,19 @@ class RabbitMQTool(BaseTool, BaseModel):
         Receive a message.
         """
         raw_message = self._execute_receive(queue_name)
-        if raw_message == "Queue name is not provided":
-            return raw_message
-        else:
-            message = json.loads(raw_message)
-            return message["content"]
+        message = json.loads(raw_message)
+        return message["content"]
 
-    # ... Similarly, define methods for other operations ...
+    def _execute_send(self, receiver, message, persistent=False, priority=0):
+        """
+        Execute a RabbitMQ send operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "send", receiver, message, persistent, priority)
+        return connection.run()
+
+    def _execute_receive(self, queue_name):
+        """
+        Execute a RabbitMQ receive operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
+        return connection.run()
