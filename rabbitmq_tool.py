@@ -22,29 +22,32 @@ class RabbitMQTool(BaseTool):
         )
         self.logger = logging.getLogger(__name__)
 
-    def _execute(self):
-        # provide your implementation here
-        pass
+    def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+        """
+        Execute a RabbitMQ operation.
+        
+        The operation can be either "send", "receive", "create_queue", "delete_queue", "add_consumer", "remove_consumer", or "send_ack". 
+        """
+        connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
+        connection.run()
 
-    def send_message(self, queue_name, message, persistent=False, priority=0):
-        connection = pika.BlockingConnection(self.connection_params)
-        channel = connection.channel()
-        properties = pika.BasicProperties(delivery_mode=2) if persistent else None  # Makes message persistent
-        channel.basic_publish(exchange='',
-                              routing_key=queue_name,
-                              body=message,
-                              properties=properties,
-                              priority=priority)
-        connection.close()
+    def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
+        """
+        Send a natural language message to a specified queue (receiver).
+        """
+        message = {
+            "sender": self.name,
+            "receiver": receiver,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "type": msg_type,
+            "content": content
+        }
+        self.execute("send", receiver, json.dumps(message), priority=priority)
 
-    def receive_message(self, queue_name):
-        connection = pika.BlockingConnection(self.connection_params)
-        channel = connection.channel()
-
-        method_frame, properties, body = channel.basic_get(queue_name, auto_ack=True)
-        if method_frame:
-            connection.close()
-            return body.decode()
-        else:
-            connection.close()
-            return None
+    def receive_natural_language_message(self, queue_name):
+        """
+        Receive a natural language message from a specified queue.
+        """
+        raw_message = self.execute("receive", queue_name)
+        message = json.loads(raw_message)
+        return message["content"]
