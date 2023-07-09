@@ -9,7 +9,7 @@ from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel
 
 
-class RabbitMQTool(BaseModel, BaseTool):
+class RabbitMQTool(BaseModel):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str
@@ -17,8 +17,10 @@ class RabbitMQTool(BaseModel, BaseTool):
     rabbitmq_password: str
     connection_params: Any
     logger: Any
+    base_tool: BaseTool
 
     def __init__(self):
+        self.base_tool = BaseTool()  # Add the specific parameters needed for BaseTool
         self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
         self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
         self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
@@ -29,7 +31,7 @@ class RabbitMQTool(BaseModel, BaseTool):
         self.logger = logging.getLogger(__name__)
 
     def _execute(self, action, parameters):
-        raise NotImplementedError("Subclasses should implement this method")
+        self.base_tool._execute(action, parameters)  # Delegate to the BaseTool instance
 
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
