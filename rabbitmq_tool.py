@@ -1,4 +1,4 @@
-from typing import Any
+from typing import List
 from superagi.tools.base_tool import BaseTool
 import pika
 import os
@@ -6,19 +6,21 @@ import logging
 import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
+from pydantic import BaseModel
+from typing import Any
 
-class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
+    
+class RabbitMQTool(BaseModel):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str
     rabbitmq_username: str
     rabbitmq_password: str
-    connection_params: Any
+    #connection_params: RabbitMQConnection
     logger: Any
     base_tool: BaseTool
 
     def __init__(self):
-        self.base_tool = BaseTool()  # Initialize the BaseTool instance
         self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
         self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
         self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
@@ -27,20 +29,27 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
             credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
         )
         self.logger = logging.getLogger(__name__)
-
-    def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
-        if action == "send":
-            self.send_natural_language_message(queue_name, message, msg_type, priority)
-        elif action == "receive":
-            return self.receive_natural_language_message(queue_name)
-        else:
-            raise ValueError(f"Unsupported action: {action}")
+        # You may need to provide the specific parameters needed for BaseTool
+        self.base_tool = BaseTool()
 
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
-        return connection.run()
+        """
+        Execute a RabbitMQ operation.
+        
+        The operation can be either "send", "receive", "create_queue", "delete_queue", "add_consumer", "remove_consumer", or "send_ack". 
+        """
+        try:
+            connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
+            connection.run()
+        except Exception as e:
+            self.logger.error(f"Error executing action '{action}': {e}")
+            # Return a default value or re-raise the exception, depending on your needs
+            return None
 
     def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
+        """
+        Send a natural language message to a specified queue (receiver).
+        """
         message = {
             "sender": self.name,
             "receiver": receiver,
@@ -51,6 +60,11 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
         self.execute("send", receiver, json.dumps(message), priority=priority)
 
     def receive_natural_language_message(self, queue_name):
+        """
+        Receive a natural language message from a specified queue.
+        """
         raw_message = self.execute("receive", queue_name)
+        if raw_message is None:
+            return None
         message = json.loads(raw_message)
         return message["content"]
