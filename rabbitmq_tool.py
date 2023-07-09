@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any
 from superagi.tools.base_tool import BaseTool
 import pika
 import os
@@ -7,16 +7,15 @@ import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel
-from typing import Any
 
-    
+
 class RabbitMQTool(BaseModel, BaseTool):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str
     rabbitmq_username: str
     rabbitmq_password: str
-    #connection_params: RabbitMQConnection
+    connection_params: Any
     logger: Any
 
     def __init__(self):
@@ -28,24 +27,15 @@ class RabbitMQTool(BaseModel, BaseTool):
             credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
         )
         self.logger = logging.getLogger(__name__)
-    
+
     def _execute(self, action, parameters):
-        # Provide a concrete implementation of the _execute method.
-        pass
-    
+        raise NotImplementedError("Subclasses should implement this method")
+
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        """
-        Execute a RabbitMQ operation.
-        
-        The operation can be either "send", "receive", "create_queue", "delete_queue", "add_consumer", "remove_consumer", or "send_ack". 
-        """
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
-        connection.run()
+        return connection.run()
 
     def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
-        """
-        Send a natural language message to a specified queue (receiver).
-        """
         message = {
             "sender": self.name,
             "receiver": receiver,
@@ -56,9 +46,6 @@ class RabbitMQTool(BaseModel, BaseTool):
         self.execute("send", receiver, json.dumps(message), priority=priority)
 
     def receive_natural_language_message(self, queue_name):
-        """
-        Receive a natural language message from a specified queue.
-        """
         raw_message = self.execute("receive", queue_name)
         message = json.loads(raw_message)
         return message["content"]
