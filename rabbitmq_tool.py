@@ -8,7 +8,7 @@ import json
 from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel
 
-class RabbitMQTool(BaseModel):
+class RabbitMQTool(BaseModel, BaseTool):  # Make sure RabbitMQTool also inherits from BaseTool
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str
@@ -28,6 +28,10 @@ class RabbitMQTool(BaseModel):
             credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
         )
         self.logger = logging.getLogger(__name__)
+
+    def _execute(self):  # Provide implementation for the _execute method
+        # Implementation of the _execute method for RabbitMQTool
+        pass
 
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
