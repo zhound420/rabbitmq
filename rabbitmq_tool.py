@@ -20,10 +20,11 @@ class RabbitMQTool(BaseTool, ABC):
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.rabbitmq_server = os.getenv('RABBITMQ_SERVER')
         self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME')
         self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD')
-        super().__init__(*args, **kwargs)
+        
 
 
     def _execute(self, *args, **kwargs):
