@@ -19,28 +19,32 @@ class RabbitMQTool(BaseTool, BaseModel):
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
-    def _execute(self, operation, args):
+    def _execute(self, *args, **kwargs):
         """
-        Executes the desired operation.
+        Adjusted _execute method to handle kwargs.
         """
+        operation = kwargs.get("operation")
+        tool_args = kwargs.get("tool_input")
+        
         if operation == "send_message":
-            if "receiver" not in args or "content" not in args:
+            if not tool_args or "receiver" not in tool_args or "content" not in tool_args:
                 raise ValueError("Incomplete tool args: 'receiver' and 'content' are required for send_message operation.")
-            receiver = args["receiver"]
-            content = args["content"]
-            msg_type = args.get("msg_type", "text")
-            priority = args.get("priority", 0)
+            receiver = tool_args["receiver"]
+            content = tool_args["content"]
+            msg_type = tool_args.get("msg_type", "text")
+            priority = tool_args.get("priority", 0)
             return self._execute_send(receiver, json.dumps(content), priority=priority)
 
         elif operation == "receive_message":
-            if "queue_name" not in args:
+            if not tool_args or "queue_name" not in tool_args:
                 raise ValueError("Incomplete tool args: 'queue_name' is required for receive_message operation.")
-            queue_name = args["queue_name"]
+            queue_name = tool_args["queue_name"]
             return self._execute_receive(queue_name)
 
         else:
             raise ValueError(f"Unknown operation: '{operation}'")
 
+    
     def _execute_send(self, receiver, message, persistent=False, priority=0):
         """
         Execute a RabbitMQ send operation.
