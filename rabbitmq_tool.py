@@ -32,7 +32,22 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
         else:
             raise ValueError(f"Unsupported action: {action}")
 
-    def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+    def execute(self, *args, **kwargs):
+        # If args contains a single dictionary, unpack it into kwargs
+        if len(args) == 1 and isinstance(args[0], dict):
+            kwargs = args[0]
+
+        # Extract variables from kwargs with default values
+        action = kwargs.get('action')
+        queue_name = kwargs.get('queue_name')
+        message = kwargs.get('message', None)
+        persistent = kwargs.get('persistent', False)
+        priority = kwargs.get('priority', 0)
+        callback = kwargs.get('callback', None)
+        consumer_tag = kwargs.get('consumer_tag', None)
+        delivery_tag = kwargs.get('delivery_tag', None)
+
+        # Create a new RabbitMQConnection and run it
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
         return connection.run()
 
