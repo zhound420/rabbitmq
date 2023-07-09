@@ -40,7 +40,8 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
         # Extract thoughts from kwargs if present
         thoughts = kwargs.get('thoughts')
         if thoughts:
-            kwargs = thoughts  # If 'thoughts' key is present, consider its value as kwargs
+            # If 'thoughts' key is present, consider its value as the message argument
+            kwargs['message'] = thoughts
 
         # Extract variables from kwargs with default values
         action = kwargs.get('action')
