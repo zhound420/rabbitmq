@@ -44,18 +44,14 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
             kwargs['message'] = kwargs.get('message', thoughts.get('text'))
 
         # Extract variables from kwargs with default values
-        action = kwargs.get('action')
-        queue_name = kwargs.get('queue_name')
+        action = kwargs.get('action', None)
+        queue_name = kwargs.get('queue_name', 'test_default_queue')
         message = kwargs.get('message', None)
         persistent = kwargs.get('persistent', False)
         priority = kwargs.get('priority', 0)
         callback = kwargs.get('callback', None)
         consumer_tag = kwargs.get('consumer_tag', None)
         delivery_tag = kwargs.get('delivery_tag', None)
-
-        # Check for missing arguments and raise an error if any are missing
-        if action is None or queue_name is None:
-            raise ValueError('Missing required arguments for execute(). Arguments provided: {}'.format(kwargs))
 
         # Create a new RabbitMQConnection and run it
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
