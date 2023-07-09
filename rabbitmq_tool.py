@@ -30,37 +30,16 @@ class RabbitMQTool(BaseTool, BaseModel):
             content = args["content"]
             msg_type = args.get("msg_type", "text")
             priority = args.get("priority", 0)
-            return self.send_message(receiver, content, msg_type, priority)
+            return self._execute_send(receiver, json.dumps(content), priority=priority)
 
         elif operation == "receive_message":
             if "queue_name" not in args:
                 raise ValueError("Incomplete tool args: 'queue_name' is required for receive_message operation.")
             queue_name = args["queue_name"]
-            return self.receive_message(queue_name)
+            return self._execute_receive(queue_name)
 
         else:
             raise ValueError(f"Unknown operation: '{operation}'")
-
-    def send_message(self, receiver, content, msg_type="text", priority=0):
-        """
-        Send a message.
-        """
-        message = {
-            "sender": self.name,
-            "receiver": receiver,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "type": msg_type,
-            "content": content
-        }
-        return self._execute_send(receiver, json.dumps(message), priority=priority)
-
-    def receive_message(self, queue_name):
-        """
-        Receive a message.
-        """
-        raw_message = self._execute_receive(queue_name)
-        message = json.loads(raw_message)
-        return message["content"]
 
     def _execute_send(self, receiver, message, persistent=False, priority=0):
         """
@@ -75,3 +54,33 @@ class RabbitMQTool(BaseTool, BaseModel):
         """
         connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
         return connection.run()
+
+    # ... Similarly, define _execute methods for other operations ...
+
+    def send_message(self, receiver, content, msg_type="text", priority=0):
+        """
+        Send a message.
+        """
+        message = {
+            "sender": self.name,
+            "receiver": receiver,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "type": msg_type,
+            "content": content
+        }
+        return self._execute("send_message", {
+            "receiver": receiver,
+            "content": json.dumps(message),
+            "msg_type": msg_type,
+            "priority": priority
+        })
+
+    def receive_message(self, queue_name):
+        """
+        Receive a message.
+        """
+        raw_message = self._execute("receive_message", {"queue_name": queue_name})
+        message = json.loads(raw_message)
+        return message["content"]
+
+    # ... Similarly, define methods for other operations ...
