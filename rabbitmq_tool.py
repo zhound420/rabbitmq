@@ -20,7 +20,11 @@ class RabbitMQTool(BaseTool):
             credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
         )
         self.logger = logging.getLogger(__name__)
-
+    
+    def _execute(self, action, parameters):
+        # Provide a concrete implementation of the _execute method.
+        pass
+    
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         """
         Execute a RabbitMQ operation.
