@@ -44,8 +44,8 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
             kwargs['message'] = kwargs.get('message', thoughts.get('text'))
 
         # Extract variables from kwargs with default values
-        action = kwargs.get('action', None)
-        queue_name = kwargs.get('queue_name', 'test_default_queue')
+        action = kwargs.get('action', 'default_action')
+        queue_name = kwargs.get('queue_name', 'default_queue')
         message = kwargs.get('message', None)
         persistent = kwargs.get('persistent', False)
         priority = kwargs.get('priority', 0)
