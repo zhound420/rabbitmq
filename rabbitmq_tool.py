@@ -4,19 +4,14 @@ import logging
 import pika
 from superagi.tools.base_tool import BaseTool
 
-class RabbitMQTool(BaseTool):
+class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
-
-    def __init__(self):
-        self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
-        self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
-        self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
-        self.connection_params = pika.ConnectionParameters(
-            host=self.rabbitmq_server,
-            credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        )
-        self.logger = logging.getLogger(__name__)
+    rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
+    rabbitmq_username: str = os.getenv('RABBITMQ_USERNAME', 'guest')
+    rabbitmq_password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
+    connection_params: Any
+    logger: Any
 
     def _execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         """
@@ -48,3 +43,4 @@ class RabbitMQTool(BaseTool):
         message = json.loads(raw_message)
         return message["content"]
     
+   
