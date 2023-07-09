@@ -6,9 +6,8 @@ import logging
 import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
-from pydantic import BaseModel
 
-class RabbitMQTool(BaseModel, BaseTool):  # Make sure RabbitMQTool also inherits from BaseTool
+class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str
@@ -29,9 +28,13 @@ class RabbitMQTool(BaseModel, BaseTool):  # Make sure RabbitMQTool also inherits
         )
         self.logger = logging.getLogger(__name__)
 
-    def _execute(self):  # Provide implementation for the _execute method
-        # Implementation of the _execute method for RabbitMQTool
-        pass
+    def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
+        if action == "send":
+            self.send_natural_language_message(queue_name, message, msg_type, priority)
+        elif action == "receive":
+            return self.receive_natural_language_message(queue_name)
+        else:
+            raise ValueError(f"Unsupported action: {action}")
 
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
