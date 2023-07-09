@@ -18,7 +18,7 @@ class RabbitMQTool(BaseTool):
         )
         self.logger = logging.getLogger(__name__)
 
-    def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+    def _execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         """
         Execute a RabbitMQ operation.
         
