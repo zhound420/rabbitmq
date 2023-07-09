@@ -29,15 +29,23 @@ class RabbitMQTool(BaseTool, BaseModel):
         """
         Execute a RabbitMQ send operation.
         """
-        connection = RabbitMQConnection(self.connection_params, "send", receiver, message, persistent, priority)
-        return connection.run()
+        if receiver is None or message is None:
+            # Handle the case when receiver or message is None
+            return "Receiver or message is not provided"
+        else:
+            connection = RabbitMQConnection(self.connection_params, "send", receiver, message, persistent, priority)
+            return connection.run()
 
     def _execute_receive(self, queue_name):
         """
         Execute a RabbitMQ receive operation.
         """
-        connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
-        return connection.run()
+        if queue_name is None:
+            # Handle the case when queue_name is None
+            return "Queue name is not provided"
+        else:
+            connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
+            return connection.run()
 
     # ... Similarly, define _execute methods for other operations ...
 
@@ -59,7 +67,10 @@ class RabbitMQTool(BaseTool, BaseModel):
         Receive a message.
         """
         raw_message = self._execute_receive(queue_name)
-        message = json.loads(raw_message)
-        return message["content"]
+        if raw_message == "Queue name is not provided":
+            return raw_message
+        else:
+            message = json.loads(raw_message)
+            return message["content"]
 
     # ... Similarly, define methods for other operations ...
