@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import List
 from superagi.tools.base_tool import BaseTool
 import pika
@@ -8,7 +7,7 @@ import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
 
-class RabbitMQTool(BaseTool, ABC):
+class RabbitMQTool(BaseTool):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
 
