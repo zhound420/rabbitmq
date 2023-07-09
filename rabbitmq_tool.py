@@ -13,6 +13,7 @@ class RabbitMQTool(BaseTool):
     connection_params: Any
     logger: Any
 
+
     def __init__(self):
         super().__init__()  # Call the BaseTool's initializer if necessary
         self.connection_params = pika.ConnectionParameters(
@@ -20,6 +21,10 @@ class RabbitMQTool(BaseTool):
             credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
         )
         self.logger = logging.getLogger(__name__)
+
+    def _execute(self):
+        # provide your implementation here
+        pass
 
     def send_message(self, queue_name, message, persistent=False, priority=0):
         connection = pika.BlockingConnection(self.connection_params)
