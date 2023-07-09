@@ -13,7 +13,7 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
     connection_params: Any
     logger: Any
 
-    def _execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+    def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         """
         Execute a RabbitMQ operation.
         
