@@ -24,6 +24,13 @@ class RabbitMQTool(BaseTool, BaseModel):
         Adjusted _execute method to handle kwargs.
         """
         tool_input = kwargs.get("tool_input", {})
+        # Check if tool_input is a string and try to load it as a JSON object
+        if isinstance(tool_input, str):
+            try:
+                tool_input = json.loads(tool_input)
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid JSON string in tool_input: {tool_input}")
+
         operation = tool_input.get("operation")
         tool_args = tool_input
 
