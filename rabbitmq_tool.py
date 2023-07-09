@@ -37,6 +37,11 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
         if len(args) == 1 and isinstance(args[0], dict):
             kwargs = args[0]
 
+        # Extract thoughts from kwargs if present
+        thoughts = kwargs.get('thoughts')
+        if thoughts:
+            kwargs = thoughts  # If 'thoughts' key is present, consider its value as kwargs
+
         # Extract variables from kwargs with default values
         action = kwargs.get('action')
         queue_name = kwargs.get('queue_name')
