@@ -7,15 +7,11 @@ from superagi.tools.base_tool import BaseTool
 class RabbitMQTool(BaseTool):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
-    rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
-    rabbitmq_username: str = os.getenv('RABBITMQ_USERNAME', 'guest')
-    rabbitmq_password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
-    connection_params: Any
-    logger: Any
-
 
     def __init__(self):
-        super().__init__()  # Call the BaseTool's initializer if necessary
+        self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
+        self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
+        self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
         self.connection_params = pika.ConnectionParameters(
             host=self.rabbitmq_server,
             credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
@@ -51,3 +47,4 @@ class RabbitMQTool(BaseTool):
         raw_message = self.execute("receive", queue_name)
         message = json.loads(raw_message)
         return message["content"]
+    
