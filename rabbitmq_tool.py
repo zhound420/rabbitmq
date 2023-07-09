@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Type, Optional
+from typing import Type, Optional, Any
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
