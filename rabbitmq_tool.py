@@ -5,9 +5,8 @@ import datetime
 import json
 import pika
 from superagi.tools.base_tool import BaseTool
-from rabbitmq_connection import RabbitMQConnection
 
-class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
+class RabbitMQTool(BaseTool):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
@@ -24,50 +23,25 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
         )
         self.logger = logging.getLogger(__name__)
 
-    def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
-        if action == "send":
-            self.send_natural_language_message(queue_name, message, msg_type, priority)
-        elif action == "receive":
-            return self.receive_natural_language_message(queue_name)
+    def send_message(self, queue_name, message, persistent=False, priority=0):
+        connection = pika.BlockingConnection(self.connection_params)
+        channel = connection.channel()
+        properties = pika.BasicProperties(delivery_mode=2) if persistent else None  # Makes message persistent
+        channel.basic_publish(exchange='',
+                              routing_key=queue_name,
+                              body=message,
+                              properties=properties,
+                              priority=priority)
+        connection.close()
+
+    def receive_message(self, queue_name):
+        connection = pika.BlockingConnection(self.connection_params)
+        channel = connection.channel()
+
+        method_frame, properties, body = channel.basic_get(queue_name, auto_ack=True)
+        if method_frame:
+            connection.close()
+            return body.decode()
         else:
-            raise ValueError(f"Unsupported action: {action}")
-
-    def execute(self, *args, **kwargs):
-        # If args contains a single dictionary, unpack it into kwargs
-        if len(args) == 1 and isinstance(args[0], dict):
-            kwargs = args[0]
-
-        # Extract thoughts from kwargs if present
-        thoughts = kwargs.get('thoughts')
-        if thoughts:
-            # If 'thoughts' key is present, consider its 'text' value as the message argument if no message argument is provided
-            kwargs['message'] = kwargs.get('message', thoughts.get('text'))
-
-        # Extract variables from kwargs with default values
-        action = kwargs.get('action', 'default_action')
-        queue_name = kwargs.get('queue_name', 'default_queue')
-        message = kwargs.get('message', None)
-        persistent = kwargs.get('persistent', False)
-        priority = kwargs.get('priority', 0)
-        callback = kwargs.get('callback', None)
-        consumer_tag = kwargs.get('consumer_tag', None)
-        delivery_tag = kwargs.get('delivery_tag', None)
-
-        # Create a new RabbitMQConnection and run it
-        connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
-        return connection.run()
-
-    def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
-        message = {
-            "sender": self.name,
-            "receiver": receiver,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "type": msg_type,
-            "content": content
-        }
-        self.execute("send", receiver, json.dumps(message), priority=priority)
-
-    def receive_natural_language_message(self, queue_name):
-        raw_message = self.execute("receive", queue_name)
-        message = json.loads(raw_message)
-        return message["content"]
+            connection.close()
+            return None
