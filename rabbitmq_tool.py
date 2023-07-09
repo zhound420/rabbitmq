@@ -29,9 +29,6 @@ class RabbitMQTool(BaseModel):
         )
         self.logger = logging.getLogger(__name__)
 
-    def _execute(self, action, parameters):
-        self.base_tool._execute(action, parameters)  # Delegate to the BaseTool instance
-
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
         return connection.run()
