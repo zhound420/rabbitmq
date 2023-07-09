@@ -23,9 +23,10 @@ class RabbitMQTool(BaseTool, BaseModel):
         """
         Adjusted _execute method to handle kwargs.
         """
-        operation = kwargs.get("operation")
-        tool_args = kwargs.get("tool_input")
-        
+        tool_input = kwargs.get("tool_input", {})
+        operation = tool_input.get("operation")
+        tool_args = tool_input
+
         if operation == "send_message":
             if not tool_args or "receiver" not in tool_args or "content" not in tool_args:
                 raise ValueError("Incomplete tool args: 'receiver' and 'content' are required for send_message operation.")
@@ -44,7 +45,6 @@ class RabbitMQTool(BaseTool, BaseModel):
         else:
             raise ValueError(f"Unknown operation: '{operation}'")
 
-    
     def _execute_send(self, receiver, message, persistent=False, priority=0):
         """
         Execute a RabbitMQ send operation.
@@ -59,8 +59,6 @@ class RabbitMQTool(BaseTool, BaseModel):
         connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
         return connection.run()
 
-    # ... Similarly, define _execute methods for other operations ...
-
     def send_message(self, receiver, content, msg_type="text", priority=0):
         """
         Send a message.
@@ -72,19 +70,12 @@ class RabbitMQTool(BaseTool, BaseModel):
             "type": msg_type,
             "content": content
         }
-        return self._execute("send_message", {
-            "receiver": receiver,
-            "content": json.dumps(message),
-            "msg_type": msg_type,
-            "priority": priority
-        })
+        return self._execute_send(receiver, json.dumps(message), priority=priority)
 
     def receive_message(self, queue_name):
         """
         Receive a message.
         """
-        raw_message = self._execute("receive_message", {"queue_name": queue_name})
+        raw_message = self._execute_receive(queue_name)
         message = json.loads(raw_message)
         return message["content"]
-
-    # ... Similarly, define methods for other operations ...
