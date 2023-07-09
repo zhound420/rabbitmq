@@ -6,28 +6,69 @@ from rabbitmq_connection import RabbitMQConnection
 import json
 import datetime
 
-class BaseRabbitMQTool(BaseTool, ABC):
+class RabbitMQTool(BaseTool, ABC):
     """
-    Base class for RabbitMQ tools. All RabbitMQ tools should inherit from this class.
+    Class for RabbitMQ tools. This class includes various tools to interact with RabbitMQ.
     """
     connection_params: Any
     logger: Any
 
-    def _execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+    name: str = "RabbitMQTool"
+    description: str = "Tool that contains various operations to interact with RabbitMQ"
+
+    def _execute_send(self, receiver, message, persistent=False, priority=0):
         """
-        Execute a RabbitMQ operation.
+        Execute a RabbitMQ send operation.
         """
-        connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
+        connection = RabbitMQConnection(self.connection_params, "send", receiver, message, persistent, priority)
         return connection.run()
 
-class SendMessageTool(BaseRabbitMQTool):
-    """
-    Tool for sending a message.
-    """
-    name: str = "Send Message Tool"
-    description: str = "Tool for sending a message via RabbitMQ"
+    def _execute_receive(self, queue_name):
+        """
+        Execute a RabbitMQ receive operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "receive", queue_name)
+        return connection.run()
+
+    def _execute_create_queue(self, queue_name):
+        """
+        Execute a RabbitMQ create_queue operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "create_queue", queue_name)
+        return connection.run()
+
+    def _execute_delete_queue(self, queue_name):
+        """
+        Execute a RabbitMQ delete_queue operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "delete_queue", queue_name)
+        return connection.run()
+
+    def _execute_add_consumer(self, queue_name, callback=None):
+        """
+        Execute a RabbitMQ add_consumer operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "add_consumer", queue_name, callback=callback)
+        return connection.run()
+
+    def _execute_remove_consumer(self, queue_name, consumer_tag=None):
+        """
+        Execute a RabbitMQ remove_consumer operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "remove_consumer", queue_name, consumer_tag=consumer_tag)
+        return connection.run()
+
+    def _execute_send_ack(self, queue_name, delivery_tag=None):
+        """
+        Execute a RabbitMQ send_ack operation.
+        """
+        connection = RabbitMQConnection(self.connection_params, "send_ack", queue_name, delivery_tag=delivery_tag)
+        return connection.run()
 
     def send_message(self, receiver, content, msg_type="text", priority=0):
+        """
+        Send a message.
+        """
         message = {
             "sender": self.name,
             "receiver": receiver,
@@ -35,66 +76,42 @@ class SendMessageTool(BaseRabbitMQTool):
             "type": msg_type,
             "content": content
         }
-        return self._execute("send", receiver, json.dumps(message), priority=priority)
-
-class ReceiveMessageTool(BaseRabbitMQTool):
-    """
-    Tool for receiving a message.
-    """
-    name: str = "Receive Message Tool"
-    description: str = "Tool for receiving a message via RabbitMQ"
+        return self._execute_send(receiver, json.dumps(message), priority=priority)
 
     def receive_message(self, queue_name):
-        raw_message = self._execute("receive", queue_name)
+        """
+        Receive a message.
+        """
+        raw_message = self._execute_receive(queue_name)
         message = json.loads(raw_message)
         return message["content"]
 
-class CreateQueueTool(BaseRabbitMQTool):
-    """
-    Tool for creating a queue.
-    """
-    name: str = "Create Queue Tool"
-    description: str = "Tool for creating a queue via RabbitMQ"
-
     def create_queue(self, queue_name):
-        return self._execute("create_queue", queue_name)
-
-class DeleteQueueTool(BaseRabbitMQTool):
-    """
-    Tool for deleting a queue.
-    """
-    name: str = "Delete Queue Tool"
-    description: str = "Tool for deleting a queue via RabbitMQ"
+        """
+        Create a queue.
+        """
+        return self._execute_create_queue(queue_name)
 
     def delete_queue(self, queue_name):
-        return self._execute("delete_queue", queue_name)
-
-class AddConsumerTool(BaseRabbitMQTool):
-    """
-    Tool for adding a consumer.
-    """
-    name: str = "Add Consumer Tool"
-    description: str = "Tool for adding a consumer via RabbitMQ"
+        """
+        Delete a queue.
+        """
+        return self._execute_delete_queue(queue_name)
 
     def add_consumer(self, queue_name, callback=None):
-        return self._execute("add_consumer", queue_name, callback=callback)
-
-class RemoveConsumerTool(BaseRabbitMQTool):
-    """
-    Tool for removing a consumer.
-    """
-    name: str = "Remove Consumer Tool"
-    description: str = "Tool for removing a consumer via RabbitMQ"
+        """
+        Add a consumer.
+        """
+        return self._execute_add_consumer(queue_name, callback=callback)
 
     def remove_consumer(self, queue_name, consumer_tag=None):
-        return self._execute("remove_consumer", queue_name, consumer_tag=consumer_tag)
-
-class SendAckTool(BaseRabbitMQTool):
-    """
-    Tool for sending an acknowledgement.
-    """
-    name: str = "Send Acknowledgement Tool"
-    description: str = "Tool for sending an acknowledgement via RabbitMQ"
+        """
+        Remove a consumer.
+        """
+        return self._execute_remove_consumer(queue_name, consumer_tag=consumer_tag)
 
     def send_ack(self, queue_name, delivery_tag=None):
-        return self._execute("send_ack", queue_name, delivery_tag=delivery_tag)
+        """
+        Send an acknowledgement.
+        """
+        return self._execute_send_ack(queue_name, delivery_tag=delivery_tag)
