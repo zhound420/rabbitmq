@@ -6,10 +6,18 @@ import logging
 import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
+from pydantic import BaseModel
+from typing import Any
 
-class RabbitMQTool(BaseTool):
+    
+class RabbitMQTool(BaseModel, BaseTool):
     name = "RabbitMQ Tool"
     description = "A tool for interacting with RabbitMQ"
+    rabbitmq_server: str
+    rabbitmq_username: str
+    rabbitmq_password: str
+    #connection_params: RabbitMQConnection
+    logger: Any
 
     def __init__(self):
         self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
