@@ -10,11 +10,19 @@ class RabbitMQTool(BaseTool, ABC):
     """
     Class for RabbitMQ tools. This class includes various tools to interact with RabbitMQ.
     """
-    connection_params: Any
+    rabbitmq_server: str
+    rabbitmq_username: str
+    rabbitmq_password: str
     logger: Any
 
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
+
+    def __init__(self, rabbitmq_server, rabbitmq_username, rabbitmq_password, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.rabbitmq_server = rabbitmq_server
+        self.rabbitmq_username = rabbitmq_username
+        self.rabbitmq_password = rabbitmq_password
 
     def _execute(self, *args, **kwargs):
         """
