@@ -7,17 +7,17 @@ from rabbitmq_connection import RabbitMQConnection
 import json
 import datetime
 
-class RabbitMQTool(BaseTool, ABC):
+class RabbitMQTool(BaseTool, BaseModel):
     """
     Class for RabbitMQ tools. This class includes various tools to interact with RabbitMQ.
     """
     logger: Any
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
-    rabbitmq_server: str = Field(..., env="RABBITMQ_SERVER")
-    rabbitmq_username: str = Field(..., env="RABBITMQ_USERNAME")
-    rabbitmq_password: str = Field(..., env="RABBITMQ_PASSWORD")
 
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
+    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
+    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
     def _execute(self, *args, **kwargs):
         """
