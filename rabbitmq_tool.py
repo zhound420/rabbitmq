@@ -15,10 +15,9 @@ class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
     rabbitmq_password: str
     connection_params: Any
     logger: Any
-    base_tool: BaseTool
 
     def __init__(self):
-        self.base_tool = BaseTool()  # Initialize the BaseTool instance
+        super().__init__()  # Call the BaseTool's initializer if necessary
         self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
         self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
         self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
