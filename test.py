@@ -3,8 +3,8 @@ from superagi.tools.rabbitmq.rabbitmq_toolkit import RabbitMQTool
 
 # Retrieve the values from environment variables
 rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
-rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'username')
-rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'password')
+rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
+rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 
 # Create an instance of the class
