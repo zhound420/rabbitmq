@@ -12,6 +12,8 @@ class RabbitMQConnection:
         self.callback = callback
         self.consumer_tag = consumer_tag
         self.delivery_tag = delivery_tag
+        self.channel = None
+        self.connection = None
         self.logger = logging.getLogger(__name__)
 
     def on_connected(self, connection):
