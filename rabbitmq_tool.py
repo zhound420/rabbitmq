@@ -1,4 +1,5 @@
 import os
+import pika
 from abc import ABC
 from typing import Type, Optional, Any
 from pydantic import BaseModel, Field
@@ -18,6 +19,10 @@ class RabbitMQTool(BaseTool, BaseModel):
     rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.connection_params = pika.ConnectionParameters(host=self.rabbitmq_server, credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password))
 
     def _execute(self, *args, **kwargs):
         """
