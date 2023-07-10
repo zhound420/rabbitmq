@@ -27,41 +27,37 @@ class RabbitMQTool(BaseTool, BaseModel):
             try:
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
-                tool_input = {"operation": "send_message", "receiver": "Linda", "message": tool_input}
-        
-        operation = tool_input.get("operation")
-        if operation == "send_message":
-            receiver = tool_input.get("receiver")
-            message = tool_input.get("message")
-            return self.send_message(receiver, message)
-        elif operation == "receive_message":
-            queue_name = tool_input.get("queue_name")
-            return self.receive_message(queue_name)
-        else:
-            raise ValueError(f"Unknown operation: '{operation}'")
+                tool_input = {"action": "send", "queue": "Linda", "message": tool_input}
 
-    def _execute_send(self, receiver, message, persistent=False, priority=0):
+        action = tool_input.get("action")
+        if action == "send":
+            queue = tool_input.get("queue")
+            message = tool_input.get("message")
+            return self._execute_send(queue, message)
+        elif action == "receive":
+            queue_name = tool_input.get("queue")
+            return self._execute_receive(queue_name)
+        else:
+            raise ValueError(f"Unknown action: '{action}'")
+
+    def _execute_send(self, queue, message, persistent=False, priority=0):
         connection_params = self.build_connection_params()
-        connection = RabbitMQConnection(connection_params, "send", receiver, message, persistent, priority)
-        return connection.run()
+        connection = RabbitMQConnection(connection_params, "send", queue, message, persistent, priority)
+        connection.run()
+
+        # Construct the message to be sent
+        message = {
+            "sender": self.name,
+            "receiver": queue,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "type": "text",
+            "content": message
+        }
+        return json.dumps(message)
 
     def _execute_receive(self, queue_name):
         connection_params = self.build_connection_params()
         connection = RabbitMQConnection(connection_params, "receive", queue_name)
-        return connection.run()
-
-    def send_message(self, receiver, message, msg_type="text", priority=0):
-        message = {
-            "sender": self.name,
-            "receiver": receiver,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "type": msg_type,
-            "content": message
-        }
-        return self._execute_send(receiver, json.dumps(message), priority=priority)
-
-    def receive_message(self, queue_name):
-        raw_message = self._execute_receive(queue_name)
+        raw_message = connection.run()
         message = json.loads(raw_message)
         return message["content"]
-    
