@@ -1,15 +1,14 @@
 # rabbitmq_tool.py
-
 import os
 import json
 import datetime
 import pika
+import logging
 from abc import ABC
 from typing import Type, Optional, Any
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
-from pika.exceptions import AMQPConnectionError, AMQPChannelError
 
 class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
@@ -19,6 +18,18 @@ class RabbitMQTool(BaseTool, BaseModel):
     rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.logger = logging.getLogger(__name__)
+
+    def build_connection_params(self):
+        self.logger.debug("Building connection params.")
+        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        self.logger.debug("Connection params built.")
+        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+
+    # rest of the code is the same
 
     def build_connection_params(self):
         credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)

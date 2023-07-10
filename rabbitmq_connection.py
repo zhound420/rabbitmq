@@ -3,6 +3,8 @@ import logging
 
 class RabbitMQConnection:
     def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug("Initializing RabbitMQConnection instance.")
         self.connection_params = connection_params
         self.action = action
         self.queue_name = queue_name
@@ -14,7 +16,9 @@ class RabbitMQConnection:
         self.delivery_tag = delivery_tag
         self.channel = None
         self.connection = None
-        self.logger = logging.getLogger(__name__)
+        self.logger.debug("RabbitMQConnection instance initialized.")
+
+    # rest of the code is the same
 
     def on_connected(self, connection):
         self.connection = connection
