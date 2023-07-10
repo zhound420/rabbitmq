@@ -1,12 +1,6 @@
 import pika
 import logging
 
-import pika
-import logging
-
-import pika
-import logging
-
 class RabbitMQConnection:
     def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         self.connection_params = connection_params
@@ -21,55 +15,12 @@ class RabbitMQConnection:
         self.channel = None
         self.connection = None
         self.logger = logging.getLogger(__name__)
-    # ... rest of the file ...
-
-
-    def on_connected(self, connection):
-        connection.channel(on_open_callback=self.on_channel_open)
 
     def on_connected(self, connection):
         self.connection = connection
         self.connection.channel(on_open_callback=self.on_channel_open)
 
     def on_channel_open(self, channel):
-        self.channel = channel
-        if self.action == 'send':
-            self.send_message()
-        elif self.action == 'receive':
-            self.receive_message()
-
-    def send_message(self):
-        properties = pika.BasicProperties(priority=self.priority)
-        self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=self.message, properties=properties)
-        self.connection.close()
-
-    def receive_message(self):
-        self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.on_message)
-        self.connection.ioloop.start()
-
-    def on_message(self, channel, method, properties, body):
-        if self.callback:
-            self.callback(body)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    def run(self):
-        self.connection = pika.SelectConnection(
-            self.connection_params,
-            on_open_callback=self.on_connected,
-            on_close_callback=self.on_closed
-        )
-        try:
-            self.connection.ioloop.start()
-        except KeyboardInterrupt:
-            self.connection.close()
-            self.connection.ioloop.start()
-
-    def on_closed(self, connection, reason):
-        if isinstance(reason, pika.exceptions.AMQPConnectionError):
-            self.logger.error('Failed to connect to RabbitMQ')
-        elif isinstance(reason, pika.exceptions.AMQPChannelError):
-            self.logger.error('An error occurred with the channel')
-on_channel_open(self, channel):
         self.channel = channel
         if self.action == 'add_consumer':
             self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.callback)
@@ -80,21 +31,11 @@ on_channel_open(self, channel):
         elif self.action == 'send':
             properties = pika.BasicProperties(priority=self.priority)
             self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=self.message, properties=properties)
-        # ... rest of the method ...
 
     def on_message(self, channel, method, properties, body):
-        # Call the callback function with the message body
-        self.callback(body)
-
-        # Send an acknowledgement
+        if self.callback:
+            self.callback(body)
         channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    def on_close(self, connection, reason):
-        if isinstance(reason, pika.exceptions.AMQPConnectionError):
-            self.logger.error('Failed to connect to RabbitMQ')
-        elif isinstance(reason, pika.exceptions.AMQPChannelError):
-            self.logger.error('An error occurred with the channel')
-        # ... rest of the method ...
 
     def run(self):
         self.connection = pika.SelectConnection(
@@ -108,4 +49,8 @@ on_channel_open(self, channel):
             self.connection.close()
             self.connection.ioloop.start()
 
-""""""
+    def on_close(self, connection, reason):
+        if isinstance(reason, pika.exceptions.AMQPConnectionError):
+            self.logger.error('Failed to connect to RabbitMQ')
+        elif isinstance(reason, pika.exceptions.AMQPChannelError):
+            self.logger.error('An error occurred with the channel')
