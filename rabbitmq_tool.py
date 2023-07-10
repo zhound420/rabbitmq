@@ -1,4 +1,3 @@
-# rabbitmq_tool.py
 from pika.exceptions import AMQPConnectionError
 import os
 import json
@@ -16,7 +15,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '10.0.11.156'))
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
@@ -30,12 +29,6 @@ class RabbitMQTool(BaseTool, BaseModel):
         self.logger.debug("Connection params built.")
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
 
-    # rest of the code is the same
-
-    def build_connection_params(self):
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
-
     def _execute(self, *args, **kwargs):
         tool_input = kwargs.get("tool_input", {})
         if isinstance(tool_input, str):
@@ -43,7 +36,7 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
                 tool_input = {"operation": "send_message", "receiver": "Linda", "message": tool_input}
-        
+
         operation = tool_input.get("operation")
         if operation == "send_message":
             receiver = tool_input.get("receiver")
@@ -52,13 +45,18 @@ class RabbitMQTool(BaseTool, BaseModel):
         elif operation == "receive_message":
             queue_name = tool_input.get("queue_name")
             return self._execute_receive(queue_name)
+        elif operation == "publish_message":
+            exchange = tool_input.get("exchange")
+            routing_key = tool_input.get("routing_key")
+            message = tool_input.get("message")
+            return self._execute_publish(exchange, routing_key, message)
         else:
             raise ValueError(f"Unknown operation: '{operation}'")
 
     def _execute_send(self, receiver, message, persistent=False, priority=0):
         try:
             connection_params = self.build_connection_params()
-            connection = RabbitMQConnection(connection_params, "send", receiver, message, persistent, priority)
+            connection = RabbitMQConnection(connection_params, "send", queue_name=receiver, message=message, persistent=persistent, priority=priority)
             return connection.run()
         except (AMQPConnectionError, AMQPChannelError) as e:
             self.logger.error(f"Error while sending message: {str(e)}")
@@ -67,10 +65,19 @@ class RabbitMQTool(BaseTool, BaseModel):
     def _execute_receive(self, queue_name):
         try:
             connection_params = self.build_connection_params()
-            connection = RabbitMQConnection(connection_params, "receive", queue_name)
+            connection = RabbitMQConnection(connection_params, "receive", queue_name=queue_name)
             return connection.run()
         except (AMQPConnectionError, AMQPChannelError) as e:
             self.logger.error(f"Error while receiving message: {str(e)}")
+            return None
+
+    def _execute_publish(self, exchange, routing_key, message):
+        try:
+            connection_params = self.build_connection_params()
+            connection = RabbitMQConnection(connection_params, "publish", exchange=exchange, routing_key=routing_key, message=message)
+            return connection.run()
+        except (AMQPConnectionError, AMQPChannelError) as e:
+            self.logger.error(f"Error while publishing message: {str(e)}")
             return None
 
     def send_message(self, receiver, message, msg_type="text", priority=0):
@@ -96,3 +103,8 @@ class RabbitMQTool(BaseTool, BaseModel):
         raw_message = self._execute(tool_input=tool_input)
         message = json.loads(raw_message)
         return message["content"]
+
+    def publish_message(self, exchange, routing_key, message, priority=0):
+        message = {
+            "sender": self.name,
+           
