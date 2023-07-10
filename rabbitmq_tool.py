@@ -107,4 +107,4 @@ class RabbitMQTool(BaseTool, BaseModel):
     def publish_message(self, exchange, routing_key, message, priority=0):
         message = {
             "sender": self.name,
-           
+            
