@@ -79,4 +79,4 @@ class RabbitMQTool(BaseTool, BaseModel):
         raw_message = self._execute_receive(queue_name)
         message = json.loads(raw_message)
         return message["content"]
-"""
+    
