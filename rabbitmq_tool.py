@@ -15,7 +15,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '10.0.11.156'))
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '10.0.11.156.'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
@@ -107,4 +107,13 @@ class RabbitMQTool(BaseTool, BaseModel):
     def publish_message(self, exchange, routing_key, message, priority=0):
         message = {
             "sender": self.name,
-            
+            "timestamp": datetime.datetime.now().isoformat(),
+            "content": message
+        }
+        tool_input = {
+            "operation": "publish_message",
+            "exchange": exchange,
+            "routing_key": routing_key,
+            "message": json.dumps(message)
+        }
+        return self._execute(tool_input=tool_input)
