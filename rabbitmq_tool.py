@@ -13,13 +13,17 @@ class RabbitMQTool(BaseTool, BaseModel):
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
-    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
-    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
+    rabbitmq_server: str = "localhost"
+    rabbitmq_username: str = "guest"
+    rabbitmq_password: str = "guest"
 
     def build_connection_params(self):
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+        try:
+            credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+            return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+        except Exception as e:
+            self.logger.error(f"Failed to build RabbitMQ connection parameters: {e}")
+            raise
 
     def _execute(self, *args, **kwargs):
         tool_input = kwargs.get("tool_input", {})
@@ -28,7 +32,7 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
                 tool_input = {"operation": "send_message", "receiver": "Linda", "message": tool_input}
-
+        
         operation = tool_input.get("operation")
         if operation == "send_message":
             receiver = tool_input.get("receiver")
