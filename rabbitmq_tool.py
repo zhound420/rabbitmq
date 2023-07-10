@@ -13,7 +13,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-    rabbitmq_server: str = "localhost"
+    rabbitmq_server: str = "host.docker.internal"
     rabbitmq_username: str = "guest"
     rabbitmq_password: str = "guest"
 
