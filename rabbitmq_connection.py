@@ -1,3 +1,5 @@
+# rabbitmq_connection.py
+
 import pika
 import logging
 
@@ -22,36 +24,11 @@ class RabbitMQConnection:
 
     def on_channel_open(self, channel):
         self.channel = channel
+        # Declare the queue before performing actions
+        self.channel.queue_declare(queue=self.queue_name, durable=True, exclusive=False, auto_delete=False)
         if self.action == 'add_consumer':
             self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.callback)
         elif self.action == 'remove_consumer':
             self.channel.basic_cancel(self.consumer_tag)
         elif self.action == 'send_ack':
-            self.channel.basic_ack(self.delivery_tag)
-        elif self.action == 'send':
-            properties = pika.BasicProperties(priority=self.priority)
-            self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=self.message, properties=properties)
-
-    def on_message(self, channel, method, properties, body):
-        if self.callback:
-            self.callback(body)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    def run(self):
-        self.connection = pika.SelectConnection(
-            self.connection_params,
-            on_open_callback=self.on_connected,
-            on_close_callback=self.on_close
-        )
-        try:
-            self.connection.ioloop.start()
-        except KeyboardInterrupt:
-            self.connection.close()
-            self.connection.ioloop.start()
-
-    def on_close(self, connection, reason):
-        if isinstance(reason, pika.exceptions.AMQPConnectionError):
-            self.logger.error('Failed to connect to RabbitMQ')
-        elif isinstance(reason, pika.exceptions.AMQPChannelError):
-            self.logger.error('An error occurred with the channel')
-
+            self.channel.basic_ack(self
