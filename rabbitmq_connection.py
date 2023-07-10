@@ -16,6 +16,7 @@ class RabbitMQConnection:
         self.connection = None
         self.logger = logging.getLogger(__name__)
 
+
     def on_connected(self, connection):
         connection.channel(on_open_callback=self.on_channel_open)
 
