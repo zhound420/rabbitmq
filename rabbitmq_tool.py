@@ -34,7 +34,7 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input = {"operation": "send_message", "receiver": "Linda", "message": tool_input}
         
         operation = tool_input.get("operation")
-        if operation == "send_message":
+        if operation in ["send_message", "publish"]:
             receiver = tool_input.get("receiver")
             message = tool_input.get("message")
             return self.send_message(receiver, message)
