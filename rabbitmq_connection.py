@@ -1,6 +1,9 @@
 import pika
 import logging
 
+import pika
+import logging
+
 class RabbitMQConnection:
     def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         self.connection_params = connection_params
