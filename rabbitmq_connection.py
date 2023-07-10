@@ -1,10 +1,9 @@
 import pika
 import logging
+from pika.exceptions import AMQPConnectionError
 
 class RabbitMQConnection:
     def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        self.logger = logging.getLogger(__name__)
-        self.logger.debug("Initializing RabbitMQConnection instance.")
         self.connection_params = connection_params
         self.action = action
         self.queue_name = queue_name
@@ -16,9 +15,7 @@ class RabbitMQConnection:
         self.delivery_tag = delivery_tag
         self.channel = None
         self.connection = None
-        self.logger.debug("RabbitMQConnection instance initialized.")
-
-    # rest of the code is the same
+        self.logger = logging.getLogger(__name__)
 
     def on_connected(self, connection):
         self.connection = connection
@@ -42,16 +39,19 @@ class RabbitMQConnection:
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def run(self):
-        self.connection = pika.SelectConnection(
-            self.connection_params,
-            on_open_callback=self.on_connected,
-            on_close_callback=self.on_close
-        )
         try:
-            self.connection.ioloop.start()
-        except KeyboardInterrupt:
-            self.connection.close()
-            self.connection.ioloop.start()
+            self.connection = pika.SelectConnection(
+                self.connection_params,
+                on_open_callback=self.on_connected,
+                on_close_callback=self.on_close
+            )
+            try:
+                self.connection.ioloop.start()
+            except KeyboardInterrupt:
+                self.connection.close()
+                self.connection.ioloop.start()
+        except AMQPConnectionError as e:
+            self.logger.error(f"Failed to connect to RabbitMQ: {str(e)}")
 
     def on_close(self, connection, reason):
         if isinstance(reason, pika.exceptions.AMQPConnectionError):
