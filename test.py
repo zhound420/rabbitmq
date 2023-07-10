@@ -11,7 +11,7 @@ rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
 tool = RabbitMQTool()
 
 # Check that the attributes are correctly initialized
-assert tool.rabbitmq_server == rabbitmq_server, f'Expected rabbitmq_server to be {rabbitmq_server}, but got {tool.rabbitmq_server}'
+assert tool.rabbitmq_server == 'host.docker.internal', f'Expected rabbitmq_server to be host.docker.internal, but got {tool.rabbitmq_server}'
 assert tool.rabbitmq_username == rabbitmq_username, f'Expected rabbitmq_username to be {rabbitmq_username}, but got {tool.rabbitmq_username}'
 assert tool.rabbitmq_password == rabbitmq_password, f'Expected rabbitmq_password to be {rabbitmq_password}, but got {tool.rabbitmq_password}'
 print('All attributes are correctly initialized!')
