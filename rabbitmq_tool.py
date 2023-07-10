@@ -15,7 +15,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '10.0.11.156.'))
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
