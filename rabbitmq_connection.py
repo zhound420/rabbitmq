@@ -24,27 +24,8 @@ class RabbitMQConnection:
     # ... rest of the file ...
 
 
-
     def on_connected(self, connection):
         connection.channel(on_open_callback=self.on_channel_open)
-
-    def import pika
-import logging
-
-class RabbitMQConnection:
-    def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        self.connection_params = connection_params
-        self.action = action
-        self.queue_name = queue_name
-        self.message = message
-        self.persistent = persistent
-        self.priority = priority
-        self.callback = callback
-        self.consumer_tag = consumer_tag
-        self.delivery_tag = delivery_tag
-        self.channel = None
-        self.connection = None
-        self.logger = logging.getLogger(__name__)
 
     def on_connected(self, connection):
         self.connection = connection
