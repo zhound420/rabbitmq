@@ -1,9 +1,8 @@
 import pika
 import logging
 
-
 class RabbitMQConnection:
-    def __init__(self, connection_params, action, queue_name, message, persistent, priority, callback=None, consumer_tag=None, delivery_tag=None):
+    def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         self.connection_params = connection_params
         self.action = action
         self.queue_name = queue_name
@@ -16,6 +15,10 @@ class RabbitMQConnection:
         self.logger = logging.getLogger(__name__)
 
     def on_connected(self, connection):
+        connection.channel(on_open_callback=self.on_channel_open)
+
+    def on_channel_open(self, channel):
+        self.channel = channel
         if self.action == 'add_consumer':
             self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.callback)
         elif self.action == 'remove_consumer':
@@ -34,7 +37,7 @@ class RabbitMQConnection:
         # Send an acknowledgement
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    def on_closed(self, connection, reason):
+    def on_close(self, connection, reason):
         if isinstance(reason, pika.exceptions.AMQPConnectionError):
             self.logger.error('Failed to connect to RabbitMQ')
         elif isinstance(reason, pika.exceptions.AMQPChannelError):
