@@ -54,3 +54,4 @@ class RabbitMQConnection:
             self.logger.error('Failed to connect to RabbitMQ')
         elif isinstance(reason, pika.exceptions.AMQPChannelError):
             self.logger.error('An error occurred with the channel')
+
