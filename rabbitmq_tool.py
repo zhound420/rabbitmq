@@ -26,17 +26,12 @@ class RabbitMQTool(BaseTool, BaseModel):
         tool_input = kwargs.get("tool_input", {})
         # Check if tool_input is a string and try to load it as a JSON object
         if isinstance(tool_input, str):
-            # If it's a string, treat it as a message to be sent
-            tool_input = {
-                "operation": "send_message",
-                "receiver": "Linda",  # This is a placeholder; ideally, this should be determined dynamically
-                "content": tool_input
-            }
-        else:
             try:
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
                 raise ValueError(f"Invalid JSON string in tool_input: {tool_input}")
+        elif not isinstance(tool_input, dict):
+            raise TypeError(f"tool_input must be a string (containing JSON) or a dictionary, not {type(tool_input).__name__}")
 
         operation = tool_input.get("operation")
         if operation == "send_message":
@@ -84,3 +79,4 @@ class RabbitMQTool(BaseTool, BaseModel):
         raw_message = self._execute_receive(queue_name)
         message = json.loads(raw_message)
         return message["content"]
+"""
