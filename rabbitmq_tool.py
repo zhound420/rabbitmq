@@ -1,3 +1,5 @@
+# rabbitmq_tool.py
+
 import os
 import json
 import datetime
@@ -7,13 +9,14 @@ from typing import Type, Optional, Any
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
 
 class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
     name: str = "RabbitMQTool"
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'host.docker.internal'))
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
@@ -41,14 +44,22 @@ class RabbitMQTool(BaseTool, BaseModel):
             raise ValueError(f"Unknown operation: '{operation}'")
 
     def _execute_send(self, receiver, message, persistent=False, priority=0):
-        connection_params = self.build_connection_params()
-        connection = RabbitMQConnection(connection_params, "send", receiver, message, persistent, priority)
-        return connection.run()
+        try:
+            connection_params = self.build_connection_params()
+            connection = RabbitMQConnection(connection_params, "send", receiver, message, persistent, priority)
+            return connection.run()
+        except (AMQPConnectionError, AMQPChannelError) as e:
+            self.logger.error(f"Error while sending message: {str(e)}")
+            return None
 
     def _execute_receive(self, queue_name):
-        connection_params = self.build_connection_params()
-        connection = RabbitMQConnection(connection_params, "receive", queue_name)
-        return connection.run()
+        try:
+            connection_params = self.build_connection_params()
+            connection = RabbitMQConnection(connection_params, "receive", queue_name)
+            return connection.run()
+        except (AMQPConnectionError, AMQPChannelError) as e:
+            self.logger.error(f"Error while receiving message: {str(e)}")
+            return None
 
     def send_message(self, receiver, message, msg_type="text", priority=0):
         message = {
