@@ -1,4 +1,5 @@
 # rabbitmq_tool.py
+from pika.exceptions import AMQPConnectionError
 import os
 import json
 import datetime
