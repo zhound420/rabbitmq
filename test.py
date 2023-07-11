@@ -7,8 +7,8 @@ rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
 rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 # Create an instance of the class, passing the retrieved values
-tool = RabbitMQTool(rabbitmq_server=rabbitmq_server, rabbitmq_username=rabbitmq_username, rabbitmq_password=rabbitmq_password)
-
+config = RabbitMQConfig(rabbitmq_server='my_server', rabbitmq_username='my_username', rabbitmq_password='my_password')
+tool = RabbitMQTool(config=config)
 # Check that the attributes are correctly initialized
 assert tool.rabbitmq_server == rabbitmq_server, f'Expected rabbitmq_server to be {rabbitmq_server}, but got {tool.rabbitmq_server}'
 assert tool.rabbitmq_username == rabbitmq_username, f'Expected rabbitmq_username to be {rabbitmq_username}, but got {tool.rabbitmq_username}'
