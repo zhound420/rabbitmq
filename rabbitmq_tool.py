@@ -63,7 +63,7 @@ class RabbitMQTool(BaseTool, BaseModel):
             priority=priority
         )
         except (AMQPConnectionError, AMQPChannelError) as e:
-        self.logger.error(f"Error while sending message: {str(e)}")
+            self.logger.error(f"Error while sending message: {str(e)}")
         return connection.run()
     
     def _execute_receive(self, queue_name):
