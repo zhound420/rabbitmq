@@ -7,6 +7,7 @@ from pika.exceptions import AMQPConnectionError, AMQPChannelError
 from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.base_tool import BaseTool
 
+
 class RabbitMQConfig(BaseModel):
     rabbitmq_server: str = os.getenv("RABBITMQ_HOST", "host.docker.internal")
     rabbitmq_username: str = os.getenv("RABBITMQ_USERNAME", "guest")
