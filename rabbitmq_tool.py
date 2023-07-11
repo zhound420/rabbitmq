@@ -6,6 +6,7 @@ from pika.exceptions import AMQPConnectionError, AMQPChannelError
 from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.base_tool import BaseTool
 
+
 class RabbitMQTool(BaseTool):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
