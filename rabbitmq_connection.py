@@ -3,11 +3,9 @@ import logging
 from pika.exceptions import AMQPConnectionError
 
 class RabbitMQConnection:
-    def __init__(self, connection_params, action, exchange=None, routing_key=None, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+    def __init__(self, connection_params, action, queue_name=None, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
         self.connection_params = connection_params
         self.action = action
-        self.exchange = exchange
-        self.routing_key = routing_key
         self.queue_name = queue_name
         self.message = message
         self.persistent = persistent
@@ -34,9 +32,6 @@ class RabbitMQConnection:
         elif self.action == 'send':
             properties = pika.BasicProperties(priority=self.priority)
             self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=self.message, properties=properties)
-        elif self.action == 'publish':
-            properties = pika.BasicProperties(priority=self.priority)
-            self.channel.basic_publish(exchange=self.exchange, routing_key=self.routing_key, body=self.message, properties=properties)
 
     def on_message(self, channel, method, properties, body):
         if self.callback:
