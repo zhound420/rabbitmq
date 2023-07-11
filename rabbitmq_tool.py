@@ -49,23 +49,21 @@ class RabbitMQTool(BaseTool, BaseModel):
         else:
             raise ValueError(f"Unknown operation: '{operation}'")
 
-# _execute_send method
     def _execute_send(self, receiver, message, persistent=False, priority=0):
         try:
+            connection_params = self.build_connection_params()
             connection = RabbitMQConnection(
-            rabbitmq_username=self.rabbitmq_username,
-            rabbitmq_password=self.rabbitmq_password,
-            rabbitmq_server=self.rabbitmq_server,
-            operation_type="send",
-            receiver=receiver,
-            message=message,
-            persistent=persistent,
-            priority=priority
-        )
+                connection_params,
+                operation_type="send",
+                queue_name=receiver,
+                message=message,
+                persistent=persistent,
+                priority=priority
+            )
         except (AMQPConnectionError, AMQPChannelError) as e:
             self.logger.error(f"Error while sending message: {str(e)}")
         return connection.run()
-    
+
     def _execute_receive(self, queue_name):
         try:
             connection_params = self.build_connection_params()
