@@ -6,7 +6,13 @@ import logging
 import pika
 
 class RabbitMQConnection:
-    def __init__(self, rabbitmq_username, rabbitmq_password, rabbitmq_server, operation_type, receiver=None, message=None, persistent=False, priority=0):
+    def __init__(self, connection_params, operation_type, queue_name=None, message=None, persistent=False, priority=0):
+        self.connection_params = connection_params
+        self.operation_type = operation_type
+        self.queue_name = queue_name
+        self.message = message
+        self.persistent = persistent
+        self.priority = priority
         self.rabbitmq_username = rabbitmq_username
         self.rabbitmq_password = rabbitmq_password
         self.rabbitmq_server = rabbitmq_server
