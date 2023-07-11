@@ -2,12 +2,12 @@ import os
 from superagi.tools.rabbitmq.rabbitmq_toolkit import RabbitMQTool
 
 # Retrieve the values from environment variables
-rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'host.docker.internal')
+rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
 rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
 rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 # Create an instance of the class, passing the retrieved values
-tool = RabbitMQTool(rabbitmq_server='host.docker.internal', rabbitmq_username='my_username', rabbitmq_password='my_password')
+tool = RabbitMQTool(rabbitmq_server='localhost', rabbitmq_username='my_username', rabbitmq_password='my_password')
 
 # Check that the attributes are correctly initialized
 assert tool.rabbitmq_server == rabbitmq_server, f'Expected rabbitmq_server to be {rabbitmq_server}, but got {tool.rabbitmq_server}'
