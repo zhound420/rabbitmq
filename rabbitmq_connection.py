@@ -1,17 +1,32 @@
 
 import pika
-from pika import PlainCredentials
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
+import json
+import logging
 
 class RabbitMQConnection:
-    def __init__(self, queue_name, message, rabbitmq_server, rabbitmq_username, rabbitmq_password):
+    def __init__(self, connection_params, operation_type, queue_name=None, message=None, persistent=False, priority=0):
+        self.connection_params = connection_params
+        self.operation_type = operation_type
         self.queue_name = queue_name
         self.message = message
-        self.rabbitmq_server = rabbitmq_server
-        self.rabbitmq_username = rabbitmq_username
-        self.rabbitmq_password = rabbitmq_password
+        self.persistent = persistent
+        self.priority = priority
+        self.logger = logging.getLogger(__name__)
 
-        if not isinstance(self.queue_name, str):
-            raise TypeError('queue_name must be a string')
+    def _connect(self):
+        self.logger.debug("Connecting to RabbitMQ.")
+        connection = pika.BlockingConnection(self.connection_params)
+        self.logger.debug("Connected.")
+        return connection
+
+    def _open_channel(self, connection):
+        self.logger.debug("Opening channel.")
+        channel = connection.channel()
+        self.logger.debug("Channel opened.")
+        return channel
+
+    # rest of the code is the same
 
     def run(self):
         try:
