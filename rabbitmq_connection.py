@@ -1,5 +1,5 @@
 
-import pika
+from pika import PlainCredentials, ConnectionParameters
 from pika.exceptions import AMQPConnectionError, AMQPChannelError
 import json
 import logging
