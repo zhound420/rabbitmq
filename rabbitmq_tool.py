@@ -97,7 +97,29 @@ class RabbitMQTool(BaseTool, BaseModel):
 
     def receive_message(self, queue_name):
         tool_input = {
-            "operation": "receive_message",
+            "operation": "receive_message",from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
+
+class RabbitMQTool:
+    def __init__(self, config):
+        self.rabbitmq_server = config.rabbitmq_server
+        self.rabbitmq_username = config.rabbitmq_username
+        self.rabbitmq_password = config.rabbitmq_password
+        self.queue_name = config.queue_name
+        self.message = config.message
+
+        if not isinstance(self.queue_name, str):
+            raise TypeError('queue_name must be a string')
+
+    def send_message(self):
+        rabbitmq_connection = RabbitMQConnection(
+            queue_name=self.queue_name,
+            message=self.message,
+            rabbitmq_server=self.rabbitmq_server,
+            rabbitmq_username=self.rabbitmq_username,
+            rabbitmq_password=self.rabbitmq_password,
+        )
+        rabbitmq_connection.run()
+
             "queue_name": queue_name
         }
         raw_message = self._execute(tool_input=tool_input)
