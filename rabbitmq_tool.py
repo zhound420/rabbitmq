@@ -6,14 +6,16 @@ from pika.exceptions import AMQPConnectionError, AMQPChannelError
 from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.base_tool import BaseTool
 
-
 class RabbitMQTool(BaseTool):
-    def __init__(self):
+    def __init__(self, rabbitmq_server=None, rabbitmq_username=None, rabbitmq_password=None):
+        self.rabbitmq_server = rabbitmq_server or os.getenv("RABBITMQ_HOST", "localhost")
+        self.rabbitmq_username = rabbitmq_username or os.getenv("RABBITMQ_USERNAME", "guest")
+        self.rabbitmq_password = rabbitmq_password or os.getenv("RABBITMQ_PASSWORD", "guest")
         self.logger = logging.getLogger(__name__)
 
     def build_connection_params(self):
-        credentials = pika.PlainCredentials(os.getenv("RABBITMQ_USERNAME", "guest"), os.getenv("RABBITMQ_PASSWORD", "guest"))
-        connection_params = pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST", "localhost"), credentials=credentials)
+        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        connection_params = pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
         return connection_params
 
     def _execute(self, *args, **kwargs):
