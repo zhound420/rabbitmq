@@ -10,25 +10,82 @@ from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
 
+class RabbitMQTool(BaseTool, BaseModel):
+    logger: Any
+    name: str = "RabbitMQTool"
+    description: str = "Tool that contains various operations to interact with RabbitMQ"
 
-class RabbitMQTool(BaseToolkit):
-    def __init__(self, config, operation_type=None, input=None):
-        super().__init__(config)
-        self.operation_type = operation_type
-        self.input = input
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
+    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
+    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
-        self.rabbitmq_connection = RabbitMQConnection(config)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.logger = logging.getLogger(__name__)
 
-    def process(self):
-        if self.operation_type == "send_message":
-            return self.rabbitmq_connection.send_message(self.input)
-        elif self.operation_type == "receive_message":
-            return self.rabbitmq_connection.receive_message()
+    def build_connection_params(self):
+        self.logger.debug("Building connection params.")
+        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        self.logger.debug("Connection params built.")
+        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+
+    def _execute(self, *args, **kwargs):
+        tool_input = kwargs.get("tool_input", {})
+        if isinstance(tool_input, str):
+            try:
+                tool_input = json.loads(tool_input)
+            except json.JSONDecodeError:
+                tool_input = {"operation": "send_message", "receiver": "Linda", "message": tool_input}
+        
+        operation = tool_input.get("operation")
+        if operation == "send_message":
+            receiver = tool_input.get("receiver")
+            message = tool_input.get("message")
+            return self._execute_send(receiver, message)
+        elif operation == "receive_message":
+            queue_name = tool_input.get("queue_name")
+            return self._execute_receive(queue_name)
         else:
-            raise Exception(f"Unsupported operation_type: {self.operation_type}")
+            raise ValueError(f"Unknown operation: '{operation}'")
 
-    def get_env_keys(self):
-        return ["rabbitmq_url"]
+    def _execute_send(self, receiver, message, persistent=False, priority=0):
+        try:
+            connection_params = self.build_connection_params()
+            connection = RabbitMQConnection(connection_params, "send", receiver, message, persistent, priority)
+            return connection.run()
+        except (AMQPConnectionError, AMQPChannelError) as e:
+            self.logger.error(f"Error while sending message: {str(e)}")
+            return None
 
-    def get_tools(self):
-        return ["rabbitmq"]
+    def _execute_receive(self, queue_name):
+        try:
+            connection_params = self.build_connection_params()
+            connection = RabbitMQConnection(connection_params, "receive", queue_name)
+            return connection.run()
+        except (AMQPConnectionError, AMQPChannelError) as e:
+            self.logger.error(f"Error while receiving message: {str(e)}")
+            return None
+
+    def send_message(self, receiver, message, msg_type="text", priority=0):
+        message = {
+            "sender": self.name,
+            "receiver": receiver,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "type": msg_type,
+            "content": message
+        }
+        tool_input = {
+            "operation": "send_message",
+            "receiver": receiver,
+            "message": json.dumps(message)
+        }
+        return self._execute(tool_input=tool_input)
+
+    def receive_message(self, queue_name):
+        tool_input = {
+            "operation": "receive_message",
+            "queue_name": queue_name
+        }
+        raw_message = self._execute(tool_input=tool_input)
+        message = json.loads(raw_message)
+        return message["content"]
