@@ -73,15 +73,26 @@ class RabbitMQTool(BaseTool, BaseModel):
             self.logger.error(f"Error while receiving message: {str(e)}")
             return None
 
-    def send_message(self, queue_name, message, msg_type="text", priority=0):  # Changed from 'receiver'
+    def send_message(self, queue_name, message, msg_type="text", priority=0):
         message = {
             "sender": self.name,
-            "receiver": queue_name,  # Changed from 'receiver'
+            "receiver": queue_name,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
             "content": message
         }
         tool_input = {
             "operation": "send_message",
-            "queue_name": queue_name,  # Changed from 'receiver'
-            "message": json.dumps(message
+            "receiver": queue_name,
+            "message": json.dumps(message)
+        }
+        return self._execute(tool_input=tool_input)
+
+    def receive_message(self, queue_name):
+        tool_input = {
+            "operation": "receive_message",
+            "queue_name": queue_name
+        }
+        raw_message = self._execute(tool_input=tool_input)
+        message = json.loads(raw_message)
+        return message["content"]
