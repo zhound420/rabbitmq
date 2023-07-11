@@ -1,33 +1,19 @@
-from pika.exceptions import AMQPConnectionError
-import os
 import json
-import datetime
+import os
 import pika
 import logging
-from abc import ABC
-from typing import Type, Optional, Any
-from pydantic import BaseModel, Field
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
+from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.base_tool import BaseTool
-from rabbitmq_connection import RabbitMQConnection
 
-class RabbitMQTool(BaseTool, BaseModel):
-    logger: Any
-    name: str = "RabbitMQTool"
-    description: str = "Tool that contains various operations to interact with RabbitMQ"
-
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
-    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
-    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class RabbitMQTool(BaseTool):
+    def __init__(self):
         self.logger = logging.getLogger(__name__)
 
     def build_connection_params(self):
-        self.logger.debug("Building connection params.")
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        self.logger.debug("Connection params built.")
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+        credentials = pika.PlainCredentials(os.getenv("RABBITMQ_USERNAME", "guest"), os.getenv("RABBITMQ_PASSWORD", "guest"))
+        connection_params = pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST", "192.168.4.194"), credentials=credentials)
+        return connection_params
 
     def _execute(self, *args, **kwargs):
         tool_input = kwargs.get("tool_input", {})
@@ -54,6 +40,13 @@ class RabbitMQTool(BaseTool, BaseModel):
             raise ValueError(f"Unknown operation: '{operation}'")
 
     def _execute_send(self, receiver, message, persistent=False, priority=0):
+        if not receiver or not isinstance(receiver, str):
+            self.logger.error("Invalid receiver.")
+            return None
+        if not message or not isinstance(message, str):
+            self.logger.error("Invalid message.")
+            return None
+
         try:
             connection_params = self.build_connection_params()
             connection = RabbitMQConnection(connection_params, "send", queue_name=receiver, message=message, persistent=persistent, priority=priority)
@@ -63,6 +56,10 @@ class RabbitMQTool(BaseTool, BaseModel):
             return None
 
     def _execute_receive(self, queue_name):
+        if not queue_name or not isinstance(queue_name, str):
+            self.logger.error("Invalid queue name.")
+            return None
+
         try:
             connection_params = self.build_connection_params()
             connection = RabbitMQConnection(connection_params, "receive", queue_name=queue_name)
@@ -72,6 +69,16 @@ class RabbitMQTool(BaseTool, BaseModel):
             return None
 
     def _execute_publish(self, exchange, routing_key, message):
+        if not exchange or not isinstance(exchange, str):
+            self.logger.error("Invalid exchange.")
+            return None
+        if not routing_key or not isinstance(routing_key, str):
+            self.logger.error("Invalid routing key.")
+            return None
+        if not message or not isinstance(message, str):
+            self.logger.error("Invalid message.")
+            return None
+
         try:
             connection_params = self.build_connection_params()
             connection = RabbitMQConnection(connection_params, "publish", exchange=exchange, routing_key=routing_key, message=message)
@@ -79,41 +86,3 @@ class RabbitMQTool(BaseTool, BaseModel):
         except (AMQPConnectionError, AMQPChannelError) as e:
             self.logger.error(f"Error while publishing message: {str(e)}")
             return None
-
-    def send_message(self, receiver, message, msg_type="text", priority=0):
-        message = {
-            "sender": self.name,
-            "receiver": receiver,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "type": msg_type,
-            "content": message
-        }
-        tool_input = {
-            "operation": "send_message",
-            "receiver": receiver,
-            "message": json.dumps(message)
-        }
-        return self._execute(tool_input=tool_input)
-
-    def receive_message(self, queue_name):
-        tool_input = {
-            "operation": "receive_message",
-            "queue_name": queue_name
-        }
-        raw_message = self._execute(tool_input=tool_input)
-        message = json.loads(raw_message)
-        return message["content"]
-
-    def publish_message(self, exchange, routing_key, message, priority=0):
-        message = {
-            "sender": self.name,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "content": message
-        }
-        tool_input = {
-            "operation": "publish_message",
-            "exchange": exchange,
-            "routing_key": routing_key,
-            "message": json.dumps(message)
-        }
-        return self._execute(tool_input=tool_input)
