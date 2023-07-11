@@ -39,3 +39,9 @@ class RabbitMQTool(BaseToolkit):
         return [
             "send_message",
         ]
+
+    def get_env_keys(self):
+        pass
+
+    def get_tools(self):
+        pass
