@@ -1,106 +1,10 @@
-from pika.exceptions import AMQPConnectionError
-import os
-import json
-import datetime
-import pika
-import logging
-from abc import ABC
-from typing import Type, Optional, Any
-from pydantic import BaseModel, Field
-from superagi.tools.base_tool import BaseTool
-from rabbitmq_connection import RabbitMQConnection
+from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
+from superagi.tools.base_toolkit import BaseToolkit
+from superagi.helper.tool_helper import Operation
 
-class RabbitMQTool(BaseTool, BaseModel):
-    logger: Any
-    name: str = "RabbitMQTool"
-    description: str = "Tool that contains various operations to interact with RabbitMQ"
-
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
-    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
-    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.logger = logging.getLogger(__name__)
-
-    def build_connection_params(self):
-        self.logger.debug("Building connection params.")
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        self.logger.debug("Connection params built.")
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
-
-    def _execute(self, *args, **kwargs):
-        tool_input = kwargs.get("tool_input", {})
-        if isinstance(tool_input, str):
-            try:
-                tool_input = json.loads(tool_input)
-            except json.JSONDecodeError:
-                tool_input = {"operation": "send_message", "receiver": "Linda", "message": tool_input}
-
-        operation = tool_input.get("operation")
-        if operation == "send_message":
-            receiver = tool_input.get("receiver")
-            message = tool_input.get("message")
-            return self._execute_send(receiver, message)
-        elif operation == "receive_message":
-            queue_name = tool_input.get("queue_name")
-            return self._execute_receive(queue_name)
-        elif operation == "publish_message":
-            exchange = tool_input.get("exchange")
-            routing_key = tool_input.get("routing_key")
-            message = tool_input.get("message")
-            return self._execute_publish(exchange, routing_key, message)
-        else:
-            raise ValueError(f"Unknown operation: '{operation}'")
-
-    def _execute_send(self, receiver, message, persistent=False, priority=0):
-        try:
-            connection_params = self.build_connection_params()
-            connection = RabbitMQConnection(connection_params, "send", queue_name=receiver, message=message, persistent=persistent, priority=priority)
-            return connection.run()
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error while sending message: {str(e)}")
-            return None
-
-    def _execute_receive(self, queue_name):
-        try:
-            connection_params = self.build_connection_params()
-            connection = RabbitMQConnection(connection_params, "receive", queue_name=queue_name)
-            return connection.run()
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error while receiving message: {str(e)}")
-            return None
-
-    def _execute_publish(self, exchange, routing_key, message):
-        try:
-            connection_params = self.build_connection_params()
-            connection = RabbitMQConnection(connection_params, "publish", exchange=exchange, routing_key=routing_key, message=message)
-            return connection.run()
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error while publishing message: {str(e)}")
-            return None
-
-    def send_message(self, receiver, message, msg_type="text", priority=0):
-        message = {
-            "sender": self.name,
-            "receiver": receiver,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "type": msg_type,
-            "content": message
-        }
-        tool_input = {
-            "operation": "send_message",
-            "receiver": receiver,
-            "message": json.dumps(message)
-        }
-        return self._execute(tool_input=tool_input)
-
-    def receive_message(self, queue_name):
-        tool_input = {
-            "operation": "receive_message",from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
-
-class RabbitMQTool:
-    def __init__(self, config):
+class RabbitMQTool(BaseToolkit):
+    def __init__(self, config, operation_type=None, input=None):
+        super().__init__(config, operation_type, input)
         self.rabbitmq_server = config.rabbitmq_server
         self.rabbitmq_username = config.rabbitmq_username
         self.rabbitmq_password = config.rabbitmq_password
@@ -120,22 +24,18 @@ class RabbitMQTool:
         )
         rabbitmq_connection.run()
 
-            "queue_name": queue_name
-        }
-        raw_message = self._execute(tool_input=tool_input)
-        message = json.loads(raw_message)
-        return message["content"]
+    def run_operation(self, operation_type, input):
+        if operation_type == Operation.SEND_MESSAGE:
+            self.send_message()
+        else:
+            raise NotImplementedError
 
-    def publish_message(self, exchange, routing_key, message, priority=0):
-        message = {
-            "sender": self.name,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "content": message
-        }
-        tool_input = {
-            "operation": "publish_message",
-            "exchange": exchange,
-            "routing_key": routing_key,
-            "message": json.dumps(message)
-        }
-        return self._execute(tool_input=tool_input)
+    @staticmethod
+    def get_tool_name():
+        return "rabbitmq"
+
+    @staticmethod
+    def get_operations():
+        return [
+            Operation.SEND_MESSAGE,
+        ]
