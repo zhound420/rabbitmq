@@ -21,7 +21,28 @@ class RabbitMQTool(BaseToolkit):
             rabbitmq_server=self.rabbitmq_server,
             rabbitmq_username=self.rabbitmq_username,
             rabbitmq_password=self.rabbitmq_password,
+        )from base_toolkit import BaseToolkit
+from rabbitmq_connection import RabbitMQConnection
+import json
+
+class RabbitMQTool(BaseToolkit):
+
+    def __init__(self, tool_name, queue_name, username, password, host):
+        super().__init__(tool_name=tool_name)
+        self.rabbitmq_connection = RabbitMQConnection(
+            queue_name=queue_name, username=username, password=password, host=host
         )
+        self.queue_name = queue_name
+
+    def execute(self, operation, data=None):
+        super().execute(operation=operation)
+        if operation == "send_message":
+            self.rabbitmq_connection.message = json.dumps(data)
+            self.rabbitmq_connection.connect()
+        elif operation == "receive_message":
+            self.rabbitmq_connection.connect()
+            return self.rabbitmq_connection.message
+
         rabbitmq_connection.run()
 
     def run_operation(self, operation_type, input):
