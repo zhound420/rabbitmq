@@ -2,20 +2,24 @@ import json
 import os
 import pika
 import logging
+from pydantic import BaseModel
 from pika.exceptions import AMQPConnectionError, AMQPChannelError
 from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.base_tool import BaseTool
 
+class RabbitMQConfig(BaseModel):
+    rabbitmq_server: str = os.getenv("RABBITMQ_HOST", "localhost")
+    rabbitmq_username: str = os.getenv("RABBITMQ_USERNAME", "guest")
+    rabbitmq_password: str = os.getenv("RABBITMQ_PASSWORD", "guest")
+
 class RabbitMQTool(BaseTool):
-    def __init__(self, rabbitmq_server=None, rabbitmq_username=None, rabbitmq_password=None):
-        self.rabbitmq_server = rabbitmq_server or os.getenv("RABBITMQ_HOST", "localhost")
-        self.rabbitmq_username = rabbitmq_username or os.getenv("RABBITMQ_USERNAME", "guest")
-        self.rabbitmq_password = rabbitmq_password or os.getenv("RABBITMQ_PASSWORD", "guest")
+    def __init__(self, config: RabbitMQConfig):
+        self.config = config
         self.logger = logging.getLogger(__name__)
 
     def build_connection_params(self):
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        connection_params = pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+        credentials = pika.PlainCredentials(self.config.rabbitmq_username, self.config.rabbitmq_password)
+        connection_params = pika.ConnectionParameters(host=self.config.rabbitmq_server, credentials=credentials)
         return connection_params
 
     def _execute(self, *args, **kwargs):
