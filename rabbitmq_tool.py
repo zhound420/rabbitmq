@@ -1,7 +1,5 @@
-
 from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
-from superagi.tools.base_toolkit import BaseToolkit
-from superagi.helper.tool_helper import Operation
+from superagi.tools.base_tool import BaseToolkit
 
 class RabbitMQTool(BaseToolkit):
     def __init__(self, config, operation_type=None, input=None):
@@ -23,10 +21,11 @@ class RabbitMQTool(BaseToolkit):
             rabbitmq_username=self.rabbitmq_username,
             rabbitmq_password=self.rabbitmq_password,
         )
+
         rabbitmq_connection.run()
 
     def run_operation(self, operation_type, input):
-        if operation_type == Operation.SEND_MESSAGE:
+        if operation_type == "send_message":
             self.send_message()
         else:
             raise NotImplementedError
@@ -38,5 +37,5 @@ class RabbitMQTool(BaseToolkit):
     @staticmethod
     def get_operations():
         return [
-            Operation.SEND_MESSAGE,
+            "send_message",
         ]
