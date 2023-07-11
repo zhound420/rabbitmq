@@ -3,9 +3,13 @@ from pika import PlainCredentials, ConnectionParameters
 from pika.exceptions import AMQPConnectionError, AMQPChannelError
 import json
 import logging
+import pika
 
 class RabbitMQConnection:
-    def __init__(self, connection_params, operation_type, queue_name=None, message=None, persistent=False, priority=0):
+    def __init__(self, rabbitmq_username, rabbitmq_password, rabbitmq_server, operation_type, receiver=None, message=None, persistent=False, priority=0):
+        self.rabbitmq_username = rabbitmq_username
+        self.rabbitmq_password = rabbitmq_password
+        self.rabbitmq_server = rabbitmq_server
         self.connection_params = connection_params
         self.operation_type = operation_type
         self.queue_name = queue_name
