@@ -9,4 +9,4 @@ config = {
     'message': 'Hello World!'
 }
 tool = RabbitMQTool(config=config, operation_type="send_message")
-tool.run_operation(operation_type="send_message", input=None)
+tool._execute(tool_input={"operation": "send_message"})
