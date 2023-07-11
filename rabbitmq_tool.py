@@ -1,4 +1,5 @@
-from pika.exceptions import AMQPConnectionError
+from pika import PlainCredentials
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
 import os
 import json
 import datetime
