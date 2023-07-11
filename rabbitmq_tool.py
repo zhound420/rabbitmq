@@ -12,7 +12,7 @@ class RabbitMQTool(BaseTool):
 
     def build_connection_params(self):
         credentials = pika.PlainCredentials(os.getenv("RABBITMQ_USERNAME", "guest"), os.getenv("RABBITMQ_PASSWORD", "guest"))
-        connection_params = pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST", "192.168.4.194"), credentials=credentials)
+        connection_params = pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST", "localhost"), credentials=credentials)
         return connection_params
 
     def _execute(self, *args, **kwargs):
