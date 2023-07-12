@@ -23,6 +23,14 @@ class RabbitMQConnection:
                     properties = pika.BasicProperties(delivery_mode=2, priority=self.priority)
                 else:
                     properties = pika.BasicProperties(priority=self.priority)
+                # Ensure self.queue_name is a string
+
+                if isinstance(self.queue_name, bytes):
+                    self.queue_name = self.queue_name.decode()
+
+                if not isinstance(self.queue_name, str):
+                    raise TypeError(f'Expected self.queue_name to be a string, but got {type(self.queue_name).__name__}')
+
                 channel.basic_publish(exchange="", routing_key=self.queue_name, body=self.message, properties=properties)
                 connection.close()
                 return "Message sent successfully."
