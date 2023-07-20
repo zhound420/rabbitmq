@@ -76,14 +76,14 @@ class RabbitMQTool(BaseTool, BaseModel):
     def send_message(self, queue_name, message, msg_type="text", priority=0):
         message = {
             "sender": self.name,
-            "receiver": queue_name,
+            "queue_name": queue_name,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
             "content": message
         }
         tool_input = {
             "action": "send_message",
-            "receiver": queue_name,
+            "queue_name": queue_name,
             "message": json.dumps(message)
         }
         return self._execute(tool_input=tool_input)
