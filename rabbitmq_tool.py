@@ -76,9 +76,8 @@ class RabbitMQTool(BaseTool, BaseModel):
             self.logger.error(f"Error while receiving message: {str(e)}")
             return None
 
-    def send_message(self, queue_name=None, message, msg_type="text", priority=0):
-        if queue_name is None:
-            queue_name = self.name
+    def send_message(self, receiver_name, message, msg_type="text", priority=0):
+        queue_name = receiver_name
         message = {
             "sender": self.name,
             "receiver": queue_name,
@@ -93,9 +92,8 @@ class RabbitMQTool(BaseTool, BaseModel):
         }
         return self._execute(tool_input=tool_input)
 
-    def receive_message(self, queue_name=None):
-        if queue_name is None:
-            queue_name = self.name
+    def receive_message(self, receiver_name):
+        queue_name = receiver_name
         tool_input = {
             "action": "receive_message",
             "queue_name": queue_name
