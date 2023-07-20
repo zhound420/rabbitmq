@@ -37,7 +37,10 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
                 tool_input = {"action": "send_message", "queue_name": self.name, "message": tool_input}
-        
+        else:
+            if "queue_name" not in tool_input or tool_input["queue_name"] is None:
+                tool_input["queue_name"] = self.name
+
         action = tool_input.get("action")
         if action == "send_message":
             queue_name = tool_input.get("queue_name")
