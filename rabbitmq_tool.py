@@ -38,16 +38,16 @@ class RabbitMQTool(BaseTool, BaseModel):
             except json.JSONDecodeError:
                 tool_input = {"action": "send_message", "queue_name": self.name, "message": tool_input}
         
-        operation = tool_input.get("action")
-        if operation == "send_message":
+        action = tool_input.get("action")
+        if action == "send_message":
             queue_name = tool_input.get("queue_name")  # Changed from 'receiver'
             message = tool_input.get("message")
             return self._execute_send(queue_name, message)  # Changed from 'receiver'
-        elif operation == "receive_message":
+        elif action == "receive_message":
             queue_name = tool_input.get("queue_name")
             return self._execute_receive(queue_name)
         else:
-            raise ValueError(f"Unknown operation: '{operation}'")
+            raise ValueError(f"Unknown operation: '{action}'")
 
     def _execute_send(self, queue_name, message, persistent=False, priority=0):  # Changed from 'receiver'
         try:
