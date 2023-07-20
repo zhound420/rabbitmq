@@ -31,6 +31,17 @@ class RabbitMQTool(BaseTool, BaseModel):
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
 
     def _execute(self, *args, **kwargs):
+        operation_mapping = {
+            "send_message": "send_message",
+            "send": "send_message",
+            "transmit": "send_message",
+            "dispatch": "send_message",
+            "receive_message": "receive_message",
+            "receive": "receive_message",
+            "fetch": "receive_message",
+            "get": "receive_message",
+        }
+        
         tool_input = kwargs.get("tool_input", {})
         if isinstance(tool_input, str):
             try:
@@ -42,11 +53,12 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input["queue_name"] = self.name
 
         action = tool_input.get("action")
-        if action == "send_message":
+        mapped_action = operation_mapping.get(action)
+        if mapped_action == "send_message":
             queue_name = tool_input.get("queue_name")
             message = tool_input.get("message")
             return self._execute_send(queue_name, message)
-        elif action == "receive_message":
+        elif mapped_action == "receive_message":
             queue_name = tool_input.get("queue_name")
             return self._execute_receive(queue_name)
         else:
@@ -101,3 +113,4 @@ class RabbitMQTool(BaseTool, BaseModel):
         raw_message = self._execute(tool_input=tool_input)
         message = json.loads(raw_message)
         return message["content"]
+"""
