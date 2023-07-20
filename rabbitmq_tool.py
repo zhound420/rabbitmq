@@ -82,7 +82,7 @@ class RabbitMQTool(BaseTool, BaseModel):
             "content": message
         }
         tool_input = {
-            "operation": "send_message",
+            "action": "send_message",
             "receiver": queue_name,
             "message": json.dumps(message)
         }
@@ -90,7 +90,7 @@ class RabbitMQTool(BaseTool, BaseModel):
 
     def receive_message(self, queue_name):
         tool_input = {
-            "operation": "receive_message",
+            "action": "receive_message",
             "queue_name": queue_name
         }
         raw_message = self._execute(tool_input=tool_input)
