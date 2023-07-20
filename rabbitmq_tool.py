@@ -13,7 +13,7 @@ from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
-    name: str = "RabbitMQTool"
+    name: str  # Added this line
     description: str = "Tool that contains various operations to interact with RabbitMQ"
 
     rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
@@ -40,22 +40,22 @@ class RabbitMQTool(BaseTool, BaseModel):
         
         action = tool_input.get("action")
         if action == "send_message":
-            queue_name = tool_input.get("queue_name")  # Changed from 'receiver'
+            queue_name = tool_input.get("queue_name")
             message = tool_input.get("message")
-            return self._execute_send(queue_name, message)  # Changed from 'receiver'
+            return self._execute_send(queue_name, message)
         elif action == "receive_message":
             queue_name = tool_input.get("queue_name")
             return self._execute_receive(queue_name)
         else:
             raise ValueError(f"Unknown operation: '{action}'")
 
-    def _execute_send(self, queue_name, message, persistent=False, priority=0):  # Changed from 'receiver'
+    def _execute_send(self, queue_name, message, persistent=False, priority=0):
         try:
             connection_params = self.build_connection_params()
             connection = RabbitMQConnection(
                 connection_params,
                 operation_type="send",
-                queue_name=queue_name,  # Changed from 'receiver'
+                queue_name=queue_name,
                 message=message,
                 persistent=persistent,
                 priority=priority
@@ -76,7 +76,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def send_message(self, queue_name, message, msg_type="text", priority=0):
         message = {
             "sender": self.name,
-            "queue_name": queue_name,
+            "receiver": queue_name,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
             "content": message
