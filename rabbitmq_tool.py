@@ -31,7 +31,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
 
     def _execute(self, *args, **kwargs):
-        operation_mapping = {
+        action_mapping = {
             "send_message": "send_message",
             "send": "send_message",
             "transmit": "send_message",
@@ -53,7 +53,7 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input["queue_name"] = self.name
 
         action = tool_input.get("action")
-        mapped_action = operation_mapping.get(action)
+        mapped_action = action_mapping.get(action)
         if mapped_action == "send_message":
             queue_name = tool_input.get("queue_name")
             message = tool_input.get("message")
@@ -62,7 +62,7 @@ class RabbitMQTool(BaseTool, BaseModel):
             queue_name = tool_input.get("queue_name")
             return self._execute_receive(queue_name)
         else:
-            raise ValueError(f"Unknown operation: '{action}'")
+            raise ValueError(f"Unknown action: '{action}'")
 
     def _execute_send(self, queue_name, message, persistent=False, priority=0):
         try:
