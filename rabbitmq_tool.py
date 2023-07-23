@@ -92,13 +92,4 @@ class RabbitMQTool(BaseTool, BaseModel):
         message = json.loads(raw_message)
         return message["content"]
 
-    def receive_message(self, receiver_name):
-        queue_name = receiver_name
-        tool_input = {
-            "action": "receive_message",
-            "queue_name": queue_name
-        }
-        raw_message = self._execute(tool_input=tool_input)
-        message = json.loads(raw_message)
-        return message["content"]
     
