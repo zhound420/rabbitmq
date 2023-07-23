@@ -30,39 +30,42 @@ class RabbitMQTool(BaseTool, BaseModel):
         self.logger.debug("Connection params built.")
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
 
-    def _execute(self, *args, **kwargs):
-        action_mapping = {
-            "send_message": "send_message",
-            "send": "send_message",
-            "transmit": "send_message",
-            "dispatch": "send_message",
-            "receive_message": "receive_message",
-            "receive": "receive_message",
-            "fetch": "receive_message",
-            "get": "receive_message",
-        }
-        
-        tool_input = kwargs.get("tool_input", {})
-        if isinstance(tool_input, str):
-            try:
-                tool_input = json.loads(tool_input)
-            except json.JSONDecodeError:
-                tool_input = {"action": "send_message", "queue_name": self.name, "message": tool_input}
-        else:
-            if "queue_name" not in tool_input or tool_input["queue_name"] is None:
-                tool_input["queue_name"] = self.name
+def _execute(self, *args, **kwargs):
+    action_mapping = {
+        "send_message": "send_message",
+        "send": "send_message",
+        "transmit": "send_message",
+        "dispatch": "send_message",
+        "receive_message": "receive_message",
+        "receive": "receive_message",
+        "fetch": "receive_message",
+        "get": "receive_message",
+    }
 
-        action = tool_input.get("action")
-        mapped_action = action_mapping.get(action)
-        if mapped_action == "send_message":
-            queue_name = tool_input.get("queue_name")
-            message = tool_input.get("message")
-            return self._execute_send(queue_name, message)
-        elif mapped_action == "receive_message":
-            queue_name = tool_input.get("queue_name")
-            return self._execute_receive(queue_name)
-        else:
-            raise ValueError(f"Unknown action: '{action}'")
+    tool_input = kwargs.get("tool_input", {})
+    if isinstance(tool_input, str):
+        try:
+            tool_input = json.loads(tool_input)
+        except json.JSONDecodeError:
+            tool_input = {"action": "send_message", "queue_name": self.name, "message": tool_input}
+    else:
+        if "queue_name" not in tool_input or tool_input["queue_name"] is None:
+            tool_input["queue_name"] = self.name
+
+    # If "action" not in tool_input or it's None, use "send_message" as the action
+    tool_input["action"] = tool_input.get("action", "send_message")
+
+    action = tool_input.get("action")
+    mapped_action = action_mapping.get(action)
+    if mapped_action == "send_message":
+        queue_name = tool_input.get("queue_name")
+        message = tool_input.get("message")
+        return self._execute_send(queue_name, message)
+    elif mapped_action == "receive_message":
+        queue_name = tool_input.get("queue_name")
+        return self._execute_receive(queue_name)
+    else:
+        raise ValueError(f"Unknown action: '{action}'")
 
     def _execute_send(self, queue_name, message, persistent=False, priority=0):
         try:
