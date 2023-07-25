@@ -9,6 +9,7 @@ from abc import ABC
 from typing import Type, Optional, Any
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
+from superagi.agents.super_agi import SuperAGI
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQTool(BaseTool, BaseModel):
@@ -24,7 +25,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.agent_name = kwargs.get("agent_name", "RabbitMQTool")
+        self.agent_name = kwargs.get("ai_name", "RabbitMQTool")
 
     def build_connection_params(self):
         self.logger.debug("Building connection params.")
