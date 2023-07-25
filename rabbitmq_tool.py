@@ -9,7 +9,7 @@ from abc import ABC
 from typing import Type, Optional, Any
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
-from superagi.agents.super_agi import SuperAGI
+from superagi.agent.super_agi import SuperAGI
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQTool(BaseTool, BaseModel):
