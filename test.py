@@ -10,5 +10,5 @@ config = {
 }
 agent_name = 'my_agent_name'  # Define your agent name directly
 
-tool = RabbitMQTool(agent_name, **config)
+tool = RabbitMQTool(**config)
 tool._execute(tool_input={"operation": "send_message", "receiver": "hello", "message": "Hello World!"})
