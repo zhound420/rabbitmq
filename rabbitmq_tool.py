@@ -25,7 +25,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.agent_name = kwargs.get("agent_name", "RabbitMQTool")
+        self.agent_name = kwargs.get("ai_name", "RabbitMQTool")
 
     def build_connection_params(self):
         self.logger.debug("Building connection params.")
@@ -34,7 +34,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
     
 
-    def _execute(self, *args, agent_name: str = None, **kwargs):
+    def _execute(self, *args, ai_name: str = None, **kwargs):
         action_mapping = {
             "send_message": "send_message",
             "send": "send_message",
@@ -54,7 +54,7 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input = {"action": "send_message", "queue_name": self.agent_name, "message": tool_input}
         else:
             if "queue_name" not in tool_input or tool_input["queue_name"] is None:
-                tool_input["queue_name"] = agent_name if agent_name is not None else self.agent_name
+                tool_input["queue_name"] = ai_name if ai_name is not None else self.agent_name
 
         tool_input["action"] = tool_input.get("action", "send_message")
 
