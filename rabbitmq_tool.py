@@ -16,7 +16,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
     name: str  # Added this line
     description: str = "Tool that contains various operations to interact with RabbitMQ"
-    agent_nane: str
+    agent_nane: ai_name
 
     rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
