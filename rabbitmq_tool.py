@@ -40,7 +40,7 @@ class RabbitMQTool(BaseTool, BaseModel):
             "get": self._execute_receive,
         }
 
-        tool_input = kwargs.get("tool_input", {})
+        
         if isinstance(tool_input, str):
             try:
                 tool_input = json.loads(tool_input)
