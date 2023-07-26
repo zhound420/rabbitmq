@@ -6,7 +6,7 @@ config = {
     'rabbitmq_server': '192.168.4.194',
     'rabbitmq_username': 'guest',
     'rabbitmq_password': 'guest',
-    'agent_name': 'my_agent_name',  # Define your agent name directly
+    'agent_name': 'test_agent_name',  # Define your agent name directly
 }
 
 tool = RabbitMQTool(**config)
