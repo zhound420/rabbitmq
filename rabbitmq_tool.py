@@ -1,7 +1,7 @@
 
 
 from pydantic import BaseModel, Field
-from superagi.common.base_tool import BaseTool
+from superagi.tools.base_tool import BaseTool
 from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.rabbitmq.rabbitmq_tool_input import RabbitMQToolInput
 import pika
