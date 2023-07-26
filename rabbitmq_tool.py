@@ -16,6 +16,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
     name: str  # Added this line
     description: str = "Tool that contains various operations to interact with RabbitMQ"
+    agent_nane: str
 
     rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
@@ -25,7 +26,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.agent_name = kwargs.get("agent_name", "RabbitMQTool")
+        self.agent_name = agent_name
 
     def build_connection_params(self):
         self.logger.debug("Building connection params.")
