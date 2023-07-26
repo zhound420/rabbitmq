@@ -22,6 +22,12 @@ class RabbitMQConnection(BaseTool, BaseModel, ABC):
         self.message = message
         self.connect()
 
+    def _execute(self, tool_input):
+        if self.mode == 'send':
+            self.send()
+        elif self.mode == 'receive':
+            self.receive()
+            
     def connect(self):
         self.connection = pika.BlockingConnection(self.connection_params)
         self.channel = self.connection.channel()
@@ -51,8 +57,3 @@ class RabbitMQConnection(BaseTool, BaseModel, ABC):
         else:
             print("Cannot receive message. Channel is None.")
 
-    def _execute(self, tool_input):
-        if self.mode == 'send':
-            self.send()
-        elif self.mode == 'receive':
-            self.receive()
