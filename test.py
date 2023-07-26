@@ -1,8 +1,5 @@
 from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
-from superagi.agent.super_agi import SuperAgi
 
-# Create an instance of SuperAgi with your desired AI name
-superagi_instance = SuperAgi(ai_name='agent_name')
 
 # You should provide a valid configuration object for RabbitMQTool
 config = {
@@ -11,6 +8,7 @@ config = {
     'rabbitmq_username': 'guest',
     'rabbitmq_password': 'guest',
 }
+agent_name = 'my_agent_name'  # Define your agent name directly
 
-tool = RabbitMQTool(superagi_instance.ai_name, **config)
+tool = RabbitMQTool(agent_name, **config)
 tool._execute(tool_input={"operation": "send_message", "receiver": "hello", "message": "Hello World!"})
