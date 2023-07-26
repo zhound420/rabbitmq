@@ -15,7 +15,7 @@ class RabbitMQConnection(BaseTool, BaseModel, ABC):
     message: Optional[str] = None
 
     def __init__(self, connection_params, mode, queue_name, message):
-        super().__init__(connection_params=connection_params, mode=mode, queue_name=queue_name, message=message, description="Connection Class")
+        super().__init__(connection_params=connection_params, mode=mode, queue_name=queue_name, message=message, description="Connection Class", name="RabbitMQConnection")
         self.connection_params = connection_params
         self.mode = mode
         self.queue_name = queue_name
