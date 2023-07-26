@@ -1,3 +1,4 @@
+
 import pika
 import logging
 from pika.exceptions import AMQPConnectionError, AMQPChannelError
@@ -21,7 +22,7 @@ class RabbitMQConnection:
             return self
         except (AMQPConnectionError, AMQPChannelError) as e:
             self.logger.error(f"Error: {str(e)}")
-            return None
+            raise e  # Raise the error instead of returning None
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.connection is not None:
