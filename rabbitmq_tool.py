@@ -26,7 +26,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.agent_name = agent_name
+    #    self.agent_name = agent_name
 
     def build_connection_params(self):
         self.logger.debug("Building connection params.")
