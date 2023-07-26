@@ -6,7 +6,7 @@ from abc import ABC
 from pydantic import BaseModel
 from superagi.tools.base_tool import BaseTool
 import json
-from typing import Any
+from typing import Optional, Any
 
 
 class RabbitMQConnection(BaseTool, BaseModel, ABC):
