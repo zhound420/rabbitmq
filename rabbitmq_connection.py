@@ -14,10 +14,12 @@ class RabbitMQConnection(BaseTool, BaseModel, ABC):
     queue_name: str
     message: Optional[str] = None
 
-    def __init__(self, connection_params, mode, queue_name, message=None):
-        super().__init__(connection_params=connection_params, mode=mode, queue_name=queue_name, message=message)
-        self.connection = pika.BlockingConnection(self.connection_params)
-        self.channel = self.connection.channel()
+    def __init__(self, connection_params, mode, queue_name, message):
+        super().__init__(connection_params=connection_params, mode=mode, queue_name=queue_name, message=message, description="Connection Class")
+        self.connection_params = connection_params
+        self.mode = mode
+        self.queue_name = queue_name
+        self.message = message
 
     def send(self):
         if self.channel:
