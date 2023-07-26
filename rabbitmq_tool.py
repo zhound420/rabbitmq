@@ -1,97 +1,52 @@
 
-from pika import PlainCredentials
-from pika.exceptions import AMQPConnectionError, AMQPChannelError
-import os
-import json
-import datetime
-import pika
-import logging
-from abc import ABC
-from typing import Type, Optional, Any
-from pydantic import BaseModel, Field
+from superagi.tools.rabbitmq.rabbitmq_tool_input import RabbitMQToolInput
 from superagi.tools.base_tool import BaseTool
-from superagi.agent.super_agi import SuperAgi
-from rabbitmq_connection import RabbitMQConnection
-from rabbitmq_tool_input import RabbitMQToolInput
+import logging
+import pika
 
-class RabbitMQTool(BaseTool, BaseModel):
-    logger: Any
-    name: str  
-    description: str = "Tool that contains various operations to interact with RabbitMQ"
-    agent_name: str = Field(default_factory=lambda: os.getenv('ai_name', 'superagi'))
 
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
-    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
-    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
+class RabbitMQTool(BaseTool):
+    def __init__(self, name: str, rabbitmq_server: str, rabbitmq_username: str, rabbitmq_password: str, agent_name: str = None):
+        self.name = name
+        self.rabbitmq_server = rabbitmq_server
+        self.rabbitmq_username = rabbitmq_username
+        self.rabbitmq_password = rabbitmq_password
+        self.agent_name = agent_name
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.logger = logging.getLogger(__name__)
+    def _execute(self, tool_input: RabbitMQToolInput):
+        operation = tool_input.operation
+        queue_name = tool_input.queue_name if tool_input.queue_name is not None else self.agent_name
+        message = tool_input.message
 
-    def _execute(self, tool_input: RabbitMQToolInput, agent_name: str = None):
-        action_mapping = {
-            "send_message": self._execute_send,
-            "send": self._execute_send,
-            "transmit": self._execute_send,
-            "dispatch": self._execute_send,
-            "receive_message": self._execute_receive,
-            "receive": self._execute_receive,
-            "fetch": self._execute_receive,
-            "get": self._execute_receive,
-        }
-
-        
-        if isinstance(tool_input, str):
-            try:
-                tool_input = json.loads(tool_input)
-            except json.JSONDecodeError:
-                tool_input = {"action": "send_message", "queue_name": self.agent_name, "message": tool_input}
+        if operation == "send_message":
+            self.send_message(queue_name, message)
+        elif operation == "receive_message":
+            self.receive_message(queue_name)
         else:
-            if "queue_name" not in tool_input or tool_input["queue_name"] is None:
-                tool_input.queue_name = agent_name if agent_name is not None else self.agent_name
+            logger.error(f"Unsupported operation: {operation}")
+            raise ValueError(f"Unsupported operation: {operation}")
 
-        tool_input.action = tool_input.action if tool_input.action else "send_message"
+    def send_message(self, queue_name, message):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server))
+        channel = connection.channel()
 
-        action = tool_input.action
-        mapped_action = action_mapping.get(action)
-        if callable(mapped_action):
-            queue_name = tool_input.queue_name
-            message = tool_input.message
-            return mapped_action(queue_name, message)
-        else:
-            raise ValueError(f"Unknown action: '{action}'")
+        channel.queue_declare(queue=queue_name)
 
-    def _execute_send(self, queue_name, message):
-        connection_params = self.build_connection_params()
-        conn = RabbitMQConnection(connection_params, 'send', queue_name, message)
-        return conn.send()
+        channel.basic_publish(exchange='', routing_key=queue_name, body=message)
+        logger.info(f"[x] Sent {message}")
 
-    def _execute_receive(self, queue_name):
-        connection_params = self.build_connection_params()
-        conn = RabbitMQConnection(connection_params, 'receive', queue_name)
-        return conn.receive()
+        connection.close()
 
-    def build_connection_params(self):
-        self.logger.debug("Building connection params.")
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        self.logger.debug("Connection params built.")
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+    def receive_message(self, queue_name):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server))
+        channel = connection.channel()
 
-    def send_message(self, message, msg_type="text", priority=0, queue_name=None):
-        queue_name = queue_name or self.agent_name
-        message = {
-            "sender": self.agent_name,
-            "receiver": queue_name,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "type": msg_type,
-            "content": message
-        }
-        return self._execute_send(queue_name, json.dumps(message))
+        channel.queue_declare(queue=queue_name)
 
-    def receive_message(self, queue_name=None):
-        queue_name = queue_name or self.agent_name
-        raw_message = self._execute_receive(queue_name)
-        if raw_message:
-            message = json.loads(raw_message)
-            return message["content"]
-        return None
+        def callback(ch, method, properties, body):
+            logger.info(f"[x] Received {body}")
+
+        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+
+        logger.info('[*] Waiting for messages. To exit press CTRL+C')
+        channel.start_consuming()
