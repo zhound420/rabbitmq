@@ -67,11 +67,13 @@ class RabbitMQTool(BaseTool, BaseModel):
             raise ValueError(f"Unknown action: '{action}'")
 
     def _execute_send(self, queue_name, message):
-        conn = RabbitMQConnection(self.build_connection_params(), 'send', queue_name, message)
+        connection_params = self.build_connection_params()
+        conn = RabbitMQConnection(connection_params, 'send', queue_name, message)
         return conn.send()
 
     def _execute_receive(self, queue_name):
-        conn = RabbitMQConnection(self.build_connection_params(), 'receive', queue_name)
+        connection_params = self.build_connection_params()
+        conn = RabbitMQConnection(connection_params, 'receive', queue_name)
         return conn.receive()
 
     def send_message(self, message, msg_type="text", priority=0, queue_name=None):
