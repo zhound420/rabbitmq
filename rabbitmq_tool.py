@@ -71,6 +71,8 @@ class RabbitMQTool(BaseTool, BaseModel):
         else:
             raise ValueError(f"Unknown action: '{action}'")
 
+
+
     def _execute_send(self, queue_name, message):
         with RabbitMQConnection(queue_name) as conn:
             conn.send_message(message)
@@ -79,7 +81,8 @@ class RabbitMQTool(BaseTool, BaseModel):
         with RabbitMQConnection(queue_name) as conn:
             return conn.receive_message()
 
-    def send_message(self, queue_name, message, msg_type="text", priority=0):
+    def send_message(self, queue_name=None, message, msg_type="text", priority=0):
+        queue_name = queue_name or self.agent_name
         message = {
             "sender": self.agent_name,
             "receiver": queue_name,
@@ -89,7 +92,8 @@ class RabbitMQTool(BaseTool, BaseModel):
         }
         return self._execute_send(queue_name, json.dumps(message))
 
-    def receive_message(self, queue_name):
+    def receive_message(self, queue_name=None):
+        queue_name = queue_name or self.agent_name
         raw_message = self._execute_receive(queue_name)
         message = json.loads(raw_message)
         return message["content"]
