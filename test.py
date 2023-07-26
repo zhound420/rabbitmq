@@ -1,4 +1,5 @@
 from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
+from superagi.tools.rabbitmq.rabbitmq_tool_input import RabbitMQToolInput
 
 # You should provide a valid configuration object for RabbitMQTool
 config = {
@@ -10,4 +11,5 @@ config = {
 }
 
 tool = RabbitMQTool(**config)
-tool._execute(tool_input={"operation": "send_message", "receiver": "hello", "message": "Hello World!"})
+tool_input = RabbitMQToolInput(action="send_message", queue_name="hello", message="Hello World!")
+tool._execute(tool_input=tool_input)
