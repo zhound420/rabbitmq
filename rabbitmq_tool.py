@@ -1,4 +1,3 @@
-
 from pika import PlainCredentials
 from pika.exceptions import AMQPConnectionError, AMQPChannelError
 import os
@@ -38,6 +37,7 @@ class RabbitMQTool(BaseTool, BaseModel):
             "fetch": self._execute_receive,
             "get": self._execute_receive,
         }
+
         tool_input = kwargs.get("tool_input", {})
         if isinstance(tool_input, str):
             try:
@@ -59,12 +59,6 @@ class RabbitMQTool(BaseTool, BaseModel):
         else:
             raise ValueError(f"Unknown action: '{action}'")
 
-    def build_connection_params(self):
-        self.logger.debug("Building connection params.")
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        self.logger.debug("Connection params built.")
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
-
     def _execute_send(self, queue_name, message):
         connection_params = self.build_connection_params()
         conn = RabbitMQConnection(connection_params, 'send', queue_name, message)
@@ -74,6 +68,12 @@ class RabbitMQTool(BaseTool, BaseModel):
         connection_params = self.build_connection_params()
         conn = RabbitMQConnection(connection_params, 'receive', queue_name)
         return conn.receive()
+
+    def build_connection_params(self):
+        self.logger.debug("Building connection params.")
+        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        self.logger.debug("Connection params built.")
+        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
 
     def send_message(self, message, msg_type="text", priority=0, queue_name=None):
         queue_name = queue_name or self.agent_name
