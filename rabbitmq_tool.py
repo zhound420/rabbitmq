@@ -55,7 +55,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         action = tool_input.action
         mapped_action = action_mapping.get(action)
         if callable(mapped_action):
-            queue_name = tool_input.get("queue_name")
+            queue_name = tool_input.queue_name
             message = tool_input.get("message")
             return mapped_action(queue_name, message)
         else:
