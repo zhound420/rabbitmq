@@ -25,7 +25,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.ai_name = kwargs.get("ai_name", "RabbitMQTool")
+        self.agent_name = kwargs.get("agent_name", "RabbitMQTool")
 
     def build_connection_params(self):
         self.logger.debug("Building connection params.")
@@ -34,7 +34,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
     
 
-    def _execute(self, *args, ai_name: str = None, **kwargs):
+    def _execute(self, *args, agent_name: str = None, **kwargs):
         action_mapping = {
             "send_message": "send_message",
             "send": "send_message",
@@ -51,10 +51,10 @@ class RabbitMQTool(BaseTool, BaseModel):
             try:
                 tool_input = json.loads(tool_input)
             except json.JSONDecodeError:
-                tool_input = {"action": "send_message", "queue_name": self.ai_name, "message": tool_input}
+                tool_input = {"action": "send_message", "queue_name": self.agent_name, "message": tool_input}
         else:
             if "queue_name" not in tool_input or tool_input["queue_name"] is None:
-                tool_input["queue_name"] = ai_name if ai_name is not None else self.ai_name
+                tool_input["queue_name"] = agent_name if agent_name is not None else self.agent_name
 
         tool_input["action"] = tool_input.get("action", "send_message")
 
@@ -80,7 +80,7 @@ class RabbitMQTool(BaseTool, BaseModel):
 
     def send_message(self, queue_name, message, msg_type="text", priority=0):
         message = {
-            "sender": self.ai_name,
+            "sender": self.agent_name,
             "receiver": queue_name,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
