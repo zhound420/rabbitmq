@@ -67,9 +67,12 @@ class RabbitMQTool(BaseTool, BaseModel):
             raise ValueError(f"Unknown action: '{action}'")
 
     def _execute_send(self, queue_name, message):
-        connection_params = self.build_connection_params()
-        with RabbitMQConnection(connection_params, 'send', queue_name, message) as conn:
-            return conn.run()
+        with RabbitMQConnection(self.build_connection_params(), 'send', queue_name, message) as conn:
+            if conn is not None:
+                return conn.run()
+            else:
+                self.logger.error("Failed to establish a RabbitMQ connection.")
+            return None
 
     def _execute_receive(self, queue_name):
         connection_params = self.build_connection_params()
