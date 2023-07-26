@@ -16,5 +16,4 @@ class RabbitMQToolkit(BaseToolkit, ABC):
             "RABBITMQ_SERVER",
             "RABBITMQ_USERNAME",
             "RABBITMQ_PASSWORD"
-            # Add more config keys specific to your project
         ]
