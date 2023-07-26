@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import pika
 from superagi.tools.base_tool import BaseTool
 
-class RabbitMQConnection(BaseTool, BaseModel, ABC):
+class RabbitMQConnection(BaseTool, BaseModel):
     connection_params: Any
     mode: str
     queue_name: str
