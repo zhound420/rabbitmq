@@ -52,7 +52,7 @@ class RabbitMQTool(BaseTool, BaseModel):
 
         tool_input.action = tool_input.action if tool_input.action else "send_message"
 
-        action = tool_input.get("action")
+        action = tool_input.action
         mapped_action = action_mapping.get(action)
         if callable(mapped_action):
             queue_name = tool_input.get("queue_name")
