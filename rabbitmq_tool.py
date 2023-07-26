@@ -1,3 +1,4 @@
+
 from pika import PlainCredentials
 from pika.exceptions import AMQPConnectionError, AMQPChannelError
 import os
@@ -31,7 +32,6 @@ class RabbitMQTool(BaseTool, BaseModel):
         credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
         self.logger.debug("Connection params built.")
         return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
-    
 
     def _execute(self, *args, agent_name: str = None, **kwargs):
         action_mapping = {
@@ -67,17 +67,12 @@ class RabbitMQTool(BaseTool, BaseModel):
             raise ValueError(f"Unknown action: '{action}'")
 
     def _execute_send(self, queue_name, message):
-        with RabbitMQConnection(self.build_connection_params(), 'send', queue_name, message) as conn:
-            if conn is not None:
-                return conn.run()
-            else:
-                self.logger.error("Failed to establish a RabbitMQ connection.")
-            return None
+        conn = RabbitMQConnection(self.build_connection_params(), 'send', queue_name, message)
+        return conn.send()
 
     def _execute_receive(self, queue_name):
-        connection_params = self.build_connection_params()
-        with RabbitMQConnection(connection_params, 'receive', queue_name) as conn:
-            return conn.run()
+        conn = RabbitMQConnection(self.build_connection_params(), 'receive', queue_name)
+        return conn.receive()
 
     def send_message(self, message, msg_type="text", priority=0, queue_name=None):
         queue_name = queue_name or self.agent_name
