@@ -1,10 +1,8 @@
-from pydantic import BaseModel
 
+from pydantic import BaseModel, Field
 
-from typing import Optional
-from pydantic import BaseModel
 
 class RabbitMQToolInput(BaseModel):
-    action: str
-    queue_name: str
-    message: Optional[str]
+    operation: str = Field(...)
+    queue_name: str = Field(...)
+    message: str = Field(None)
