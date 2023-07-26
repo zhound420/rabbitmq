@@ -81,7 +81,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         with RabbitMQConnection(queue_name) as conn:
             return conn.receive_message()
 
-    def send_message(self, queue_name=None, message, msg_type="text", priority=0):
+    def send_message(self, message, msg_type="text", priority=0, queue_name=None):
         queue_name = queue_name or self.agent_name
         message = {
             "sender": self.agent_name,
