@@ -1,57 +1,55 @@
 
 import pika
 import logging
-from pika.exceptions import AMQPConnectionError, AMQPChannelError
 
 class RabbitMQConnection:
-    def __init__(self, connection_params, operation_type, queue_name=None, message=None, persistent=False, priority=0):
+    def __init__(self, connection_params, operation, queue_name, message=None):
         self.connection_params = connection_params
-        self.operation_type = operation_type
+        self.operation = operation
         self.queue_name = queue_name
         self.message = message
-        self.persistent = persistent
-        self.priority = priority
         self.logger = logging.getLogger(__name__)
         self.connection = None
         self.channel = None
 
     def __enter__(self):
         try:
+            self.logger.debug("Establishing RabbitMQ connection.")
             self.connection = pika.BlockingConnection(self.connection_params)
             self.channel = self.connection.channel()
-            return self
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error: {str(e)}")
-            raise e  # Raise the error instead of returning None
+            self.logger.debug("RabbitMQ connection established.")
+        except pika.exceptions.AMQPConnectionError as error:
+            self.logger.error(f"Error establishing RabbitMQ connection: {error}")
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.connection is not None:
+            self.logger.debug("Closing RabbitMQ connection.")
             self.connection.close()
 
     def send(self):
-        try:
+        if self.channel is not None:
+            self.logger.debug("Sending message.")
             self.channel.queue_declare(queue=self.queue_name, durable=True)
-            if self.persistent:
-                properties = pika.BasicProperties(delivery_mode=2, priority=self.priority)
-            else:
-                properties = pika.BasicProperties(priority=self.priority)
-
-            if isinstance(self.queue_name, bytes):
-                self.queue_name = self.queue_name.decode()
-
-            if not isinstance(self.queue_name, str):
-                raise TypeError(f'Expected self.queue_name to be a string, but got {type(self.queue_name).__name__}')
-
-            self.channel.basic_publish(exchange="", routing_key=self.queue_name, body=self.message, properties=properties)
-            return "Message sent successfully."
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error: {str(e)}")
-            return None
+            self.channel.basic_publish(
+                exchange='',
+                routing_key=self.queue_name,
+                body=self.message,
+                properties=pika.BasicProperties(delivery_mode=2)  # make message persistent
+            )
+            self.logger.debug("Message sent.")
+        else:
+            self.logger.error("Cannot send message. Channel is None.")
+        return self.message
 
     def receive(self):
-        try:
-            method_frame, header_frame, body = self.channel.basic_get(queue=self.queue_name, auto_ack=True)
-            return body
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error: {str(e)}")
-            return None
+        if self.channel is not None:
+            self.logger.debug("Receiving message.")
+            self.channel.queue_declare(queue=self.queue_name, durable=True)
+            method_frame, properties, body = self.channel.basic_get(queue=self.queue_name, auto_ack=True)
+            self.logger.debug("Message received.")
+            if method_frame:
+                return body.decode()
+        else:
+            self.logger.error("Cannot receive message. Channel is None.")
+        return None
