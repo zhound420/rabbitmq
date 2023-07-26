@@ -56,7 +56,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         mapped_action = action_mapping.get(action)
         if callable(mapped_action):
             queue_name = tool_input.queue_name
-            message = tool_input.get("message")
+            message = tool_input.message
             return mapped_action(queue_name, message)
         else:
             raise ValueError(f"Unknown action: '{action}'")
