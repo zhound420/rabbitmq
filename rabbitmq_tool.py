@@ -1,57 +1,47 @@
 
+from typing import Optional
+from pydantic import BaseModel
+from abc import ABC, abstractmethod
 
-from pydantic import BaseModel, Field
-from superagi.tools.base_tool import BaseTool
-from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
-from superagi.tools.rabbitmq.rabbitmq_tool_input import RabbitMQToolInput
-import pika
+class RabbitMQToolInput(BaseModel):
+    operation: Optional[str]
+    receiver: Optional[str]
+    message: Optional[str]
 
-class RabbitMQTool(BaseModel, BaseTool):
-    name: str = Field("RabbitMQ-SuperAGI Tool")
-    rabbitmq_server: str = Field("localhost")
-    rabbitmq_username: str = Field("guest")
-    rabbitmq_password: str = Field("guest")
-    agent_name: str = Field("test_agent_name")
+class RabbitMQConnection(ABC, BaseModel):
+    name: str
+    rabbitmq_server: str
+    rabbitmq_username: str
+    rabbitmq_password: str
+    agent_name: Optional[str] = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.connection = RabbitMQConnection(
-            rabbitmq_server=self.rabbitmq_server,
-            rabbitmq_username=self.rabbitmq_username,
-            rabbitmq_password=self.rabbitmq_password,
-        )
+    @abstractmethod
+    def connect(self):
+        pass
+
+class RabbitMQTool(RabbitMQConnection):
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.connect()
 
     def _execute(self, tool_input: RabbitMQToolInput):
         operation = tool_input.operation
+        receiver = tool_input.receiver
+        message = tool_input.message
+
         if operation == 'send_message':
-            receiver = tool_input.receiver
-            message = tool_input.message
-            self.connection.send_message(receiver, message)
+            self.send_message(receiver, message)
         elif operation == 'receive_message':
-            sender = tool_input.sender
-            return self.connection.receive_message(sender)
+            self.receive_message(receiver)
+        else:
+            raise ValueError(f"Invalid operation {operation}")
 
-    def send_message(self, queue_name, message):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server))
-        channel = connection.channel()
+    def connect(self):
+        print(f"Connecting to RabbitMQ server at {self.rabbitmq_server}...")
 
-        channel.queue_declare(queue=queue_name)
+    def send_message(self, receiver, message):
+        print(f"Sending message {message} to {receiver}...")
 
-        channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-        logger.info(f"[x] Sent {message}")
-
-        connection.close()
-
-    def receive_message(self, queue_name):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server))
-        channel = connection.channel()
-
-        channel.queue_declare(queue=queue_name)
-
-        def callback(ch, method, properties, body):
-            logger.info(f"[x] Received {body}")
-
-        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-
-        logger.info('[*] Waiting for messages. To exit press CTRL+C')
-        channel.start_consuming()
+    def receive_message(self, receiver):
+        print(f"Receiving message from {receiver}...")
+        
