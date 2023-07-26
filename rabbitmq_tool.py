@@ -1,30 +1,35 @@
 
+
+from pydantic import BaseModel, Field
+from superagi.common.base_tool import BaseTool
+from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 from superagi.tools.rabbitmq.rabbitmq_tool_input import RabbitMQToolInput
-from superagi.tools.base_tool import BaseTool
-import logging
 import pika
 
+class RabbitMQTool(BaseModel, BaseTool):
+    name: str = Field("RabbitMQ-SuperAGI Tool")
+    rabbitmq_server: str = Field("localhost")
+    rabbitmq_username: str = Field("guest")
+    rabbitmq_password: str = Field("guest")
+    agent_name: str = Field("test_agent_name")
 
-class RabbitMQTool(BaseTool):
-    def __init__(self, name: str, rabbitmq_server: str, rabbitmq_username: str, rabbitmq_password: str, agent_name: str = None):
-        self.name = name
-        self.rabbitmq_server = rabbitmq_server
-        self.rabbitmq_username = rabbitmq_username
-        self.rabbitmq_password = rabbitmq_password
-        self.agent_name = agent_name
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.connection = RabbitMQConnection(
+            rabbitmq_server=self.rabbitmq_server,
+            rabbitmq_username=self.rabbitmq_username,
+            rabbitmq_password=self.rabbitmq_password,
+        )
 
     def _execute(self, tool_input: RabbitMQToolInput):
         operation = tool_input.operation
-        queue_name = tool_input.queue_name if tool_input.queue_name is not None else self.agent_name
-        message = tool_input.message
-
-        if operation == "send_message":
-            self.send_message(queue_name, message)
-        elif operation == "receive_message":
-            self.receive_message(queue_name)
-        else:
-            logger.error(f"Unsupported operation: {operation}")
-            raise ValueError(f"Unsupported operation: {operation}")
+        if operation == 'send_message':
+            receiver = tool_input.receiver
+            message = tool_input.message
+            self.connection.send_message(receiver, message)
+        elif operation == 'receive_message':
+            sender = tool_input.sender
+            return self.connection.receive_message(sender)
 
     def send_message(self, queue_name, message):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server))
