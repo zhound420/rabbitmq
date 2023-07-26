@@ -14,7 +14,7 @@ from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
-    name: str  # Added this line
+    name: str  
     description: str = "Tool that contains various operations to interact with RabbitMQ"
     agent_name: str = Field(default_factory=lambda: os.getenv('ai_name', 'superagi'))
 
@@ -22,11 +22,9 @@ class RabbitMQTool(BaseTool, BaseModel):
     rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
     rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-    #    self.agent_name = agent_name
 
     def build_connection_params(self):
         self.logger.debug("Building connection params.")
@@ -37,14 +35,14 @@ class RabbitMQTool(BaseTool, BaseModel):
 
     def _execute(self, *args, agent_name: str = None, **kwargs):
         action_mapping = {
-            "send_message": "send_message",
-            "send": "send_message",
-            "transmit": "send_message",
-            "dispatch": "send_message",
-            "receive_message": "receive_message",
-            "receive": "receive_message",
-            "fetch": "receive_message",
-            "get": "receive_message",
+            "send_message": self._execute_send,
+            "send": self._execute_send,
+            "transmit": self._execute_send,
+            "dispatch": self._execute_send,
+            "receive_message": self._execute_receive,
+            "receive": self._execute_receive,
+            "fetch": self._execute_receive,
+            "get": self._execute_receive,
         }
 
         tool_input = kwargs.get("tool_input", {})
@@ -61,25 +59,22 @@ class RabbitMQTool(BaseTool, BaseModel):
 
         action = tool_input.get("action")
         mapped_action = action_mapping.get(action)
-        if mapped_action == "send_message":
+        if callable(mapped_action):
             queue_name = tool_input.get("queue_name")
             message = tool_input.get("message")
-            return self._execute_send(queue_name, message)
-        elif mapped_action == "receive_message":
-            queue_name = tool_input.get("queue_name")
-            return self._execute_receive(queue_name)
+            return mapped_action(queue_name, message)
         else:
             raise ValueError(f"Unknown action: '{action}'")
 
-
-
     def _execute_send(self, queue_name, message):
-        with RabbitMQConnection(queue_name) as conn:
-            conn.send_message(message)
+        connection_params = self.build_connection_params()
+        with RabbitMQConnection(connection_params, 'send', queue_name, message) as conn:
+            return conn.run()
 
     def _execute_receive(self, queue_name):
-        with RabbitMQConnection(queue_name) as conn:
-            return conn.receive_message()
+        connection_params = self.build_connection_params()
+        with RabbitMQConnection(connection_params, 'receive', queue_name) as conn:
+            return conn.run()
 
     def send_message(self, message, msg_type="text", priority=0, queue_name=None):
         queue_name = queue_name or self.agent_name
@@ -95,7 +90,7 @@ class RabbitMQTool(BaseTool, BaseModel):
     def receive_message(self, queue_name=None):
         queue_name = queue_name or self.agent_name
         raw_message = self._execute_receive(queue_name)
-        message = json.loads(raw_message)
-        return message["content"]
-
-    
+        if raw_message:
+            message = json.loads(raw_message)
+            return message["content"]
+        return None
