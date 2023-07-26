@@ -27,12 +27,6 @@ class RabbitMQTool(BaseTool, BaseModel):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
 
-    def build_connection_params(self):
-        self.logger.debug("Building connection params.")
-        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        self.logger.debug("Connection params built.")
-        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
-
     def _execute(self, *args, agent_name: str = None, **kwargs):
         action_mapping = {
             "send_message": self._execute_send,
@@ -44,7 +38,6 @@ class RabbitMQTool(BaseTool, BaseModel):
             "fetch": self._execute_receive,
             "get": self._execute_receive,
         }
-
         tool_input = kwargs.get("tool_input", {})
         if isinstance(tool_input, str):
             try:
@@ -65,6 +58,12 @@ class RabbitMQTool(BaseTool, BaseModel):
             return mapped_action(queue_name, message)
         else:
             raise ValueError(f"Unknown action: '{action}'")
+
+    def build_connection_params(self):
+        self.logger.debug("Building connection params.")
+        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        self.logger.debug("Connection params built.")
+        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
 
     def _execute_send(self, queue_name, message):
         connection_params = self.build_connection_params()
