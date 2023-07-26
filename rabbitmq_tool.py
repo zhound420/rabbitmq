@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
 from superagi.agent.super_agi import SuperAgi
 from rabbitmq_connection import RabbitMQConnection
+from rabbitmq_tool_input import RabbitMQToolInput
 
 class RabbitMQTool(BaseTool, BaseModel):
     logger: Any
@@ -27,7 +28,7 @@ class RabbitMQTool(BaseTool, BaseModel):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
 
-    def _execute(self, *args, agent_name: str = None, **kwargs):
+    def _execute(self, tool_input: RabbitMQToolInput, agent_name: str = None):
         action_mapping = {
             "send_message": self._execute_send,
             "send": self._execute_send,
