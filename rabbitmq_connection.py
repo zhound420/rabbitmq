@@ -6,6 +6,8 @@ from typing import Any, Optional
 from superagi.tools.base_tool import BaseTool
 
 class RabbitMQConnection(BaseTool, BaseModel, ABC):
+    name: str  
+    description: str = "Connection class for RabbitMQ"
     logger: Any
     connection_params: Any
     mode: str
