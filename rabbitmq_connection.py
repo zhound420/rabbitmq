@@ -3,7 +3,7 @@ import pika
 from abc import ABC
 from pydantic import BaseModel
 from typing import Any, Optional
-from superagi.models.toolkit.basetool import BaseTool
+from superagi.tools.base_tool import BaseTool
 
 class RabbitMQConnection(BaseTool, BaseModel, ABC):
     logger: Any
