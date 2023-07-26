@@ -27,7 +27,7 @@ class RabbitMQConnection(BaseTool, BaseModel, ABC):
             self.send()
         elif self.mode == 'receive':
             self.receive()
-            
+
     def connect(self):
         self.connection = pika.BlockingConnection(self.connection_params)
         self.channel = self.connection.channel()
@@ -36,11 +36,11 @@ class RabbitMQConnection(BaseTool, BaseModel, ABC):
         if self.channel:
             self.channel.queue_declare(queue=self.queue_name, durable=True)
             self.channel.basic_publish(exchange='',
-                                routing_key=self.queue_name,
-                                body=self.message,
-                                properties=pika.BasicProperties(
-                                    delivery_mode=2,  # make message persistent
-                                ))
+                        routing_key=self.queue_name,
+                        body=self.message,
+                        properties=pika.BasicProperties(
+                        delivery_mode=2,  # make message persistent
+                            ))
             self.connection.close()
             return "Message sent"
         else:
