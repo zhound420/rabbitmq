@@ -1,33 +1,44 @@
-
-import pika
+from typing import Any, Optional
 from abc import ABC
 from pydantic import BaseModel
-from typing import Any, Optional
+import pika
 from superagi.tools.base_tool import BaseTool
 
 class RabbitMQConnection(BaseTool, BaseModel, ABC):
-    name: str  
-    description: str = "Connection class for RabbitMQ"
-    logger: Any
     connection_params: Any
     mode: str
     queue_name: str
     message: Optional[str] = None
+    description: str = "RabbitMQ Connection Class"
+    name: str = "RabbitMQConnection"
+    channel: Any = None
+    connection: Any = None
 
-    def __init__(self, connection_params, mode, queue_name, message):
+    def __init__(self, connection_params, mode, queue_name, message=None):
         super().__init__(connection_params=connection_params, mode=mode, queue_name=queue_name, message=message, description="Connection Class", name="RabbitMQConnection")
         self.connection_params = connection_params
         self.mode = mode
         self.queue_name = queue_name
         self.message = message
+        self.connect()
+
+    def connect(self):
+        self.connection = pika.BlockingConnection(self.connection_params)
+        self.channel = self.connection.channel()
 
     def send(self):
         if self.channel:
             self.channel.queue_declare(queue=self.queue_name, durable=True)
-            self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=self.message)
+            self.channel.basic_publish(exchange='',
+                                routing_key=self.queue_name,
+                                body=self.message,
+                                properties=pika.BasicProperties(
+                                    delivery_mode=2,  # make message persistent
+                                ))
             self.connection.close()
+            return "Message sent"
         else:
-            print("Cannot send message. Channel is None.")
+            return "Cannot send message. Channel is None."
         
     def receive(self):
         def callback(ch, method, properties, body):
