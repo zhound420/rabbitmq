@@ -48,7 +48,7 @@ class RabbitMQTool(BaseTool, BaseModel):
                 tool_input = {"action": "send_message", "queue_name": self.agent_name, "message": tool_input}
         else:
             if "queue_name" not in tool_input or tool_input["queue_name"] is None:
-                tool_input["queue_name"] = agent_name if agent_name is not None else self.agent_name
+                tool_input.queue_name = agent_name if agent_name is not None else self.agent_name
 
         tool_input["action"] = tool_input.get("action", "send_message")
 
