@@ -2,7 +2,7 @@ from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 from superagi.agent.super_agi import SuperAgi
 
 # Create an instance of SuperAgi with your desired AI name
-superagi_instance = SuperAgi(ai_name='some_name', ...other arguments...)
+superagi_instance = SuperAgi(ai_name='agent_name')
 
 # You should provide a valid configuration object for RabbitMQTool
 config = {
