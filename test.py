@@ -2,6 +2,7 @@ from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 
 # You should provide a valid configuration object for RabbitMQTool
 config = {
+    'name': 'RabbitMQ-SuperAGI Tool',
     'rabbitmq_server': 'localhost',
     'rabbitmq_username': 'guest',
     'rabbitmq_password': 'guest',
