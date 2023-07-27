@@ -1,45 +1,41 @@
+
 import pika
-import logging
-from pika.exceptions import AMQPConnectionError, AMQPChannelError
+from pika import PlainCredentials
 
 class RabbitMQConnection:
-    def __init__(self, connection_params, operation_type, queue_name=None, message=None, persistent=False, priority=0):
-        self.connection_params = connection_params
-        self.operation_type = operation_type
+    def __init__(self, queue_name, message, rabbitmq_server, rabbitmq_username, rabbitmq_password):
         self.queue_name = queue_name
         self.message = message
-        self.persistent = persistent
-        self.priority = priority
-        self.logger = logging.getLogger(__name__)
+        self.rabbitmq_server = rabbitmq_server
+        self.rabbitmq_username = rabbitmq_username
+        self.rabbitmq_password = rabbitmq_password
+
+        if not isinstance(self.queue_name, str):
+            raise TypeError('queue_name must be a string')
 
     def run(self):
         try:
-            connection = pika.BlockingConnection(self.connection_params)
+            credentials = PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials))
             channel = connection.channel()
 
-            if self.operation_type == "send":
-                channel.queue_declare(queue=self.queue_name, durable=True)
-                if self.persistent:
-                    properties = pika.BasicProperties(delivery_mode=2, priority=self.priority)
-                else:
-                    properties = pika.BasicProperties(priority=self.priority)
-                # Ensure self.queue_name is a string
+            channel.queue_declare(queue=self.queue_name)
 
-                if isinstance(self.queue_name, bytes):
-                    self.queue_name = self.queue_name.decode()
+            # Enable delivery confirmations
+            channel.confirm_delivery()
 
-                if not isinstance(self.queue_name, str):
-                    raise TypeError(f'Expected self.queue_name to be a string, but got {type(self.queue_name).__name__}')
-
-                channel.basic_publish(exchange="", routing_key=self.queue_name, body=self.message, properties=properties)
-                connection.close()
-                return "Message sent successfully."
-            elif self.operation_type == "receive":
-                method_frame, header_frame, body = channel.basic_get(queue=self.queue_name, auto_ack=True)
-                connection.close()
-                return body
+            if channel.basic_publish(
+                exchange='',
+                routing_key=self.queue_name,
+                body=self.message,
+                properties=pika.BasicProperties(delivery_mode=2),  # make message persistent
+            ):
+                print(f"[x] Sent {self.message}")
             else:
-                raise ValueError(f"Unknown operation type: '{self.operation_type}'")
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error: {str(e)}")
-            return None
+                print("Message not delivered")
+                
+            connection.close()
+
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"Error connecting to RabbitMQ: {e}")
+            return
