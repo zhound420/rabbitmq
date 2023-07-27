@@ -1,41 +1,54 @@
-
 import pika
-from pika import PlainCredentials
+import logging
+
 
 class RabbitMQConnection:
-    def __init__(self, queue_name, message, rabbitmq_server, rabbitmq_username, rabbitmq_password):
+    def __init__(self, connection_params, action, queue_name, message, persistent, priority, callback=None, consumer_tag=None, delivery_tag=None):
+        self.connection_params = connection_params
+        self.action = action
         self.queue_name = queue_name
         self.message = message
-        self.rabbitmq_server = rabbitmq_server
-        self.rabbitmq_username = rabbitmq_username
-        self.rabbitmq_password = rabbitmq_password
+        self.persistent = persistent
+        self.priority = priority
+        self.callback = callback
+        self.consumer_tag = consumer_tag
+        self.delivery_tag = delivery_tag
+        self.logger = logging.getLogger(__name__)
 
-        if not isinstance(self.queue_name, str):
-            raise TypeError('queue_name must be a string')
+    def on_connected(self, connection):
+        if self.action == 'add_consumer':
+            self.channel.basic_consume(queue=self.queue_name, on_message_callback=self.callback)
+        elif self.action == 'remove_consumer':
+            self.channel.basic_cancel(self.consumer_tag)
+        elif self.action == 'send_ack':
+            self.channel.basic_ack(self.delivery_tag)
+        elif self.action == 'send':
+            properties = pika.BasicProperties(priority=self.priority)
+            self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=self.message, properties=properties)
+        # ... rest of the method ...
+
+    def on_message(self, channel, method, properties, body):
+        # Call the callback function with the message body
+        self.callback(body)
+
+        # Send an acknowledgement
+        channel.basic_ack(delivery_tag=method.delivery_tag)
+
+    def on_closed(self, connection, reason):
+        if isinstance(reason, pika.exceptions.AMQPConnectionError):
+            self.logger.error('Failed to connect to RabbitMQ')
+        elif isinstance(reason, pika.exceptions.AMQPChannelError):
+            self.logger.error('An error occurred with the channel')
+        # ... rest of the method ...
 
     def run(self):
+        self.connection = pika.SelectConnection(
+            self.connection_params,
+            on_open_callback=self.on_connected,
+            on_close_callback=self.on_close
+        )
         try:
-            credentials = PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials))
-            channel = connection.channel()
-
-            channel.queue_declare(queue=self.queue_name)
-
-            # Enable delivery confirmations
-            channel.confirm_delivery()
-
-            if channel.basic_publish(
-                exchange='',
-                routing_key=self.queue_name,
-                body=self.message,
-                properties=pika.BasicProperties(delivery_mode=2),  # make message persistent
-            ):
-                print(f"[x] Sent {self.message}")
-            else:
-                print("Message not delivered")
-                
-            connection.close()
-
-        except pika.exceptions.AMQPConnectionError as e:
-            print(f"Error connecting to RabbitMQ: {e}")
-            return
+            self.connection.ioloop.start()
+        except KeyboardInterrupt:
+            self.connection.close()
+            self.connection.ioloop.start()

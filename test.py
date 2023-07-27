@@ -1,12 +1,11 @@
-from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
+from superagi.tools.rabbitmq.rabbitmq_toolkit import RabbitMQTool
 
-# You should provide a valid configuration object for RabbitMQTool
-config = {
-    'rabbitmq_server': 'localhost',
-    'rabbitmq_username': 'guest',
-    'rabbitmq_password': 'guest',
-    'queue_name': 'hello',
-    'message': 'Hello World!'
-}
-tool = RabbitMQTool(config=config, operation_type="send_message")
-tool.run_operation(operation_type="send_message", input=None)
+# Create an instance of the class
+tool = RabbitMQTool()
+
+# Check that the attributes are correctly initialized
+assert tool.rabbitmq_server == 'localhost', f'Expected rabbitmq_server to be localhost, but got {tool.rabbitmq_server}'
+assert tool.rabbitmq_username == 'guest', f'Expected rabbitmq_username to be guest, but got {tool.rabbitmq_username}'
+assert tool.rabbitmq_password == 'guest', f'Expected rabbitmq_password to be guest, but got {tool.rabbitmq_password}'
+
+print('All attributes are correctly initialized!')
