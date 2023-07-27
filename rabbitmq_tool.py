@@ -1,47 +1,99 @@
+from pika import PlainCredentials
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
+import os
+import json
+import datetime
+import pika
+import logging
+from abc import ABC
+from typing import Type, Optional, Any
+from pydantic import BaseModel, Field
+from superagi.tools.base_tool import BaseTool
+from superagi.agent.super_agi import SuperAgi
+from rabbitmq_connection import RabbitMQConnection
 
-from typing import Optional
-from pydantic import BaseModel
-from abc import ABC, abstractmethod
+class RabbitMQTool(BaseTool, BaseModel):
+    logger: Any
+    name: str  
+    description: str = "Tool that contains various operations to interact with RabbitMQ"
+    agent_name: str = Field(default_factory=lambda: os.getenv('ai_name', 'superagi'))
 
-class RabbitMQToolInput(BaseModel):
-    operation: Optional[str]
-    receiver: Optional[str]
-    message: Optional[str]
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', '192.168.4.194'))
+    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
+    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
 
-class RabbitMQConnection(ABC, BaseModel):
-    name: str
-    rabbitmq_server: str
-    rabbitmq_username: str
-    rabbitmq_password: str
-    agent_name: Optional[str] = None
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.logger = logging.getLogger(__name__)
 
-    @abstractmethod
-    def connect(self):
-        pass
+    def build_connection_params(self):
+        self.logger.debug("Building connection params.")
+        credentials = pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        self.logger.debug("Connection params built.")
+        return pika.ConnectionParameters(host=self.rabbitmq_server, credentials=credentials)
+    
 
-class RabbitMQTool(RabbitMQConnection):
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.connect()
+    def _execute(self, *args, agent_name: str = None, **kwargs):
+        action_mapping = {
+            "send_message": self._execute_send,
+            "send": self._execute_send,
+            "transmit": self._execute_send,
+            "dispatch": self._execute_send,
+            "receive_message": self._execute_receive,
+            "receive": self._execute_receive,
+            "fetch": self._execute_receive,
+            "get": self._execute_receive,
+        }
 
-    def _execute(self, tool_input: RabbitMQToolInput):
-        operation = tool_input.operation
-        receiver = tool_input.receiver
-        message = tool_input.message
-
-        if operation == 'send_message':
-            self.send_message(receiver, message)
-        elif operation == 'receive_message':
-            self.receive_message(receiver)
+        tool_input = kwargs.get("tool_input", {})
+        if isinstance(tool_input, str):
+            try:
+                tool_input = json.loads(tool_input)
+            except json.JSONDecodeError:
+                tool_input = {"action": "send_message", "queue_name": self.agent_name, "message": tool_input}
         else:
-            raise ValueError(f"Invalid operation {operation}")
+            if "queue_name" not in tool_input or tool_input["queue_name"] is None:
+                tool_input["queue_name"] = agent_name if agent_name is not None else self.agent_name
 
-    def connect(self):
-        print(f"Connecting to RabbitMQ server at {self.rabbitmq_server}...")
+        tool_input["action"] = tool_input.get("action", "send_message")
 
-    def send_message(self, receiver, message):
-        print(f"Sending message {message} to {receiver}...")
+        action = tool_input.get("action")
+        mapped_action = action_mapping.get(action)
+        if callable(mapped_action):
+            queue_name = tool_input.get("queue_name")
+            message = tool_input.get("message")
+            return mapped_action(queue_name, message)
+        else:
+            raise ValueError(f"Unknown action: '{action}'")
 
-    def receive_message(self, receiver):
-        print(f"Receiving message from {receiver}...")
-        
+    def _execute_send(self, queue_name, message):
+        with RabbitMQConnection(self.build_connection_params(), 'send', queue_name, message) as conn:
+            if conn is not None:
+                return conn.run()
+            else:
+                self.logger.error("Failed to establish a RabbitMQ connection.")
+            return None
+
+    def _execute_receive(self, queue_name):
+        connection_params = self.build_connection_params()
+        with RabbitMQConnection(connection_params, 'receive', queue_name) as conn:
+            return conn.run()
+
+    def send_message(self, message, msg_type="text", priority=0, queue_name=None):
+        queue_name = queue_name or self.agent_name
+        message = {
+            "sender": self.agent_name,
+            "receiver": queue_name,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "type": msg_type,
+            "content": message
+        }
+        return self._execute_send(queue_name, json.dumps(message))
+
+    def receive_message(self, queue_name=None):
+        queue_name = queue_name or self.agent_name
+        raw_message = self._execute_receive(queue_name)
+        if raw_message:
+            message = json.loads(raw_message)
+            return message["content"]
+        return None
