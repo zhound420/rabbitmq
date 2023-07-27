@@ -11,7 +11,7 @@ from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
 
 
-class RabbitMQTool(BaseToolkit):
+class RabbitMQTool(BaseTool):
     def __init__(self, config, operation_type=None, input=None):
         super().__init__(config)
         self.operation_type = operation_type
