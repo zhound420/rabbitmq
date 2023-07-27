@@ -113,4 +113,3 @@ class RabbitMQTool(BaseTool, BaseModel):
         raw_message = self._execute(tool_input=tool_input)
         message = json.loads(raw_message)
         return message["content"]
-"""
