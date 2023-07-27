@@ -11,30 +11,19 @@ class RabbitMQConnection:
         self.persistent = persistent
         self.priority = priority
         self.logger = logging.getLogger(__name__)
-        self.connection = None
-        self.channel = None
-
-    def __enter__(self):
-        try:
-            self.connection = pika.BlockingConnection(self.connection_params)
-            self.channel = self.connection.channel()
-            return self
-        except (AMQPConnectionError, AMQPChannelError) as e:
-            self.logger.error(f"Error: {str(e)}")
-            return None
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.connection is not None:
-            self.connection.close()
 
     def run(self):
         try:
+            connection = pika.BlockingConnection(self.connection_params)
+            channel = connection.channel()
+
             if self.operation_type == "send":
-                self.channel.queue_declare(queue=self.queue_name, durable=True)
+                channel.queue_declare(queue=self.queue_name, durable=True)
                 if self.persistent:
                     properties = pika.BasicProperties(delivery_mode=2, priority=self.priority)
                 else:
                     properties = pika.BasicProperties(priority=self.priority)
+                # Ensure self.queue_name is a string
 
                 if isinstance(self.queue_name, bytes):
                     self.queue_name = self.queue_name.decode()
@@ -42,10 +31,12 @@ class RabbitMQConnection:
                 if not isinstance(self.queue_name, str):
                     raise TypeError(f'Expected self.queue_name to be a string, but got {type(self.queue_name).__name__}')
 
-                self.channel.basic_publish(exchange="", routing_key=self.queue_name, body=self.message, properties=properties)
+                channel.basic_publish(exchange="", routing_key=self.queue_name, body=self.message, properties=properties)
+                connection.close()
                 return "Message sent successfully."
             elif self.operation_type == "receive":
-                method_frame, header_frame, body = self.channel.basic_get(queue=self.queue_name, auto_ack=True)
+                method_frame, header_frame, body = channel.basic_get(queue=self.queue_name, auto_ack=True)
+                connection.close()
                 return body
             else:
                 raise ValueError(f"Unknown operation type: '{self.operation_type}'")
