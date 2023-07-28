@@ -8,7 +8,7 @@ import json
 from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
 
-class RabbitMQTool(BaseModel, BaseTool):  # RabbitMQTool should only inherit from BaseTool
+class RabbitMQToolConfig(BaseModel):
     name: str = Field("RabbitMQ Tool")
     description: str = Field("A tool for interacting with RabbitMQ")
     rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
@@ -20,15 +20,11 @@ class RabbitMQTool(BaseModel, BaseTool):  # RabbitMQTool should only inherit fro
         ))
     logger: Any = Field(default_factory=lambda: logging.getLogger(__name__))
 
-    def __init__(self):
-        self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
-        self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
-        self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
-        self.connection_params = pika.ConnectionParameters(
-            host=self.rabbitmq_server,
-            credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
-        )
-        self.logger = logging.getLogger(__name__)
+class RabbitMQTool(BaseTool):
+    config: RabbitMQToolConfig
+
+    def __init__(self, config: RabbitMQToolConfig):
+        self.config = config
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
@@ -39,12 +35,12 @@ class RabbitMQTool(BaseModel, BaseTool):  # RabbitMQTool should only inherit fro
             raise ValueError(f"Unsupported action: {action}")
 
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
+        connection = RabbitMQConnection(self.config.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
         return connection.run()
 
     def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
         message = {
-            "sender": self.name,
+            "sender": self.config.name,
             "receiver": receiver,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
