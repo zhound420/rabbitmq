@@ -4,7 +4,7 @@ from superagi.tools.external_tools.rabbitmq.rabbitmq_tool import RabbitMQTool, R
 config = RabbitMQToolConfig()
 
 # Create an instance of the class
-tool = RabbitMQTool(config=config, description="RabbitMQ tool instance")
+tool = RabbitMQTool(config=config)
 
 # Check that the attributes are correctly initialized
 assert tool.config.rabbitmq_server == 'localhost', f'Expected rabbitmq_server to be localhost, but got {tool.config.rabbitmq_server}'
