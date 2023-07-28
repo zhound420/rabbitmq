@@ -9,7 +9,7 @@ from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
-class RabbitMQToolConfig(BaseSettings):
+class RabbitMQToolConfig(BaseModel):
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
@@ -25,13 +25,12 @@ class RabbitMQToolConfig(BaseSettings):
         env_file = ".env"
         env_file_encoding = 'utf-8'
 
-class RabbitMQTool(BaseTool, BaseModel):  
+class RabbitMQTool(BaseTool):  
     config: RabbitMQToolConfig
 
     def __init__(self, config: RabbitMQToolConfig):
         self.config = config
-        super().__init__(description=config.description)
-        self.Config = config
+        super().__init__()
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
