@@ -9,7 +9,7 @@ from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
-class RabbitMQToolConfig(BaseModel):
+class RabbitMQToolConfig(BaseTool):
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
@@ -27,7 +27,7 @@ class RabbitMQToolConfig(BaseModel):
 
 class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
-      
+
     def __init__(self, config: RabbitMQToolConfig):
         self.config = config
         super().__init__()
