@@ -10,7 +10,11 @@ from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
-class RabbitMQToolConfig(BaseModel):
+
+    class RabbitMQToolConfig(BaseModel):
+        class Config:
+            arbitrary_types_allowed = True
+    
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
