@@ -7,24 +7,30 @@ import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
+from pydantic import BaseSettings
 
-class RabbitMQToolConfig(BaseModel):
-    name: str = Field("RabbitMQ Tool")
-    description: str = Field("A tool for interacting with RabbitMQ")
-    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
-    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
-    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
-    connection_params: Any = Field(default_factory=lambda: pika.ConnectionParameters(
+class RabbitMQToolConfig(BaseSettings):
+    name: str = "RabbitMQ Tool"
+    description: str = "A tool for interacting with RabbitMQ"
+    rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
+    rabbitmq_username: str = os.getenv('RABBITMQ_USERNAME', 'guest')
+    rabbitmq_password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
+    connection_params: Any = pika.ConnectionParameters(
             host=os.getenv('RABBITMQ_SERVER', 'localhost'),
             credentials=pika.PlainCredentials(os.getenv('RABBITMQ_USERNAME', 'guest'), os.getenv('RABBITMQ_PASSWORD', 'guest'))
-        ))
-    logger: Any = Field(default_factory=lambda: logging.getLogger(__name__))
+        )
+    logger: Any = logging.getLogger(__name__)
 
-class RabbitMQTool(BaseTool):
-    def __init__(self, config: RabbitMQToolConfig, description: str):
-        self.config = config
-        super().__init__(description=description)  # note the change in inheritance order
+    class Config:
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
+
+class RabbitMQTool(BaseTool):  
     config: RabbitMQToolConfig
+
+    def __init__(self, config: RabbitMQToolConfig):
+        super().__init__(description=config.description)
+        self.config = config
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
