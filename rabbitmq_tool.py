@@ -23,10 +23,6 @@ class RabbitMQToolConfig(BaseModel):
 
     def _execute(self):
         pass
-    class Config:
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
-
 class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
 
