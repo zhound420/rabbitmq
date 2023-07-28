@@ -9,7 +9,7 @@ from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
-class RabbitMQToolConfig(BaseTool):
+class RabbitMQToolConfig(RabbitMQToolConfig):
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
@@ -21,6 +21,8 @@ class RabbitMQToolConfig(BaseTool):
         )
     logger: Any = logging.getLogger(__name__)
 
+    def _execute(self):
+        pass
     class Config:
         env_file = ".env"
         env_file_encoding = 'utf-8'
