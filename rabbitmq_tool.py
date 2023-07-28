@@ -23,9 +23,6 @@ class RabbitMQToolConfig(BaseModel):
 class RabbitMQTool(BaseTool, BaseModel):  # note the change in inheritance order
     config: RabbitMQToolConfig
 
-    def __init__(self, config: RabbitMQToolConfig):
-        self.config = config  # assign the config object directly
-
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
             self.send_natural_language_message(queue_name, message, msg_type, priority)
