@@ -1,3 +1,4 @@
+
 from typing import Any
 from superagi.tools.base_tool import BaseTool
 import pika
@@ -15,32 +16,43 @@ class RabbitMQToolConfig(BaseModel):
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
     rabbitmq_username: str = os.getenv('RABBITMQ_USERNAME', 'guest')
     rabbitmq_password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
-    connection_params: Any = pika.ConnectionParameters(
-            host=os.getenv('RABBITMQ_SERVER', 'localhost'),
-            credentials=pika.PlainCredentials(os.getenv('RABBITMQ_USERNAME', 'guest'), os.getenv('RABBITMQ_PASSWORD', 'guest'))
-        )
-    logger: Any = logging.getLogger(__name__)
+    rabbitmq_virtual_host: str = os.getenv('RABBITMQ_VIRTUAL_HOST', '/')
+    rabbitmq_port: int = os.getenv('RABBITMQ_PORT', 5672)
+    connection_params: pika.ConnectionParameters = pika.ConnectionParameters(
+        host=rabbitmq_server,
+        port=rabbitmq_port,
+        virtual_host=rabbitmq_virtual_host,
+        credentials=pika.PlainCredentials(rabbitmq_username, rabbitmq_password)
+    )
 
-    def _execute(self):
-        pass
 class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
+    connection: RabbitMQConnection
 
     def __init__(self, config: RabbitMQToolConfig):
         self.config = config
+        self.connection = RabbitMQConnection(self.config.connection_params)
         super().__init__()
 
-    def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
-        if action == "send":
-            self.send_natural_language_message(queue_name, message, msg_type, priority)
-        elif action == "receive":
-            return self.receive_natural_language_message(queue_name)
-        else:
-            raise ValueError(f"Unsupported action: {action}")
+    def __del__(self):
+        # Close the connection when the tool is destroyed
+        self.connection.close()
 
-    def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        connection = RabbitMQConnection(self.config.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
-        return connection.run()
+    def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
+        # Enhanced error handling
+        try:
+            if action == "send":
+                self.send_natural_language_message(queue_name, message, msg_type, priority)
+            elif action == "receive":
+                return self.receive_natural_language_message(queue_name)
+            else:
+                raise ValueError(f"Unsupported action: {action}")
+        except Exception as e:
+            # Log the error and re-raise the exception
+            self.logger.error(f"An error occurred during execution: {e}")
+            raise
+
+    ...
 
     def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
         message = {
@@ -51,8 +63,3 @@ class RabbitMQTool(BaseTool):
             "content": content
         }
         self.execute("send", receiver, json.dumps(message), priority=priority)
-
-    def receive_natural_language_message(self, queue_name):
-        raw_message = self.execute("receive", queue_name)
-        message = json.loads(raw_message)
-        return message["content"]
