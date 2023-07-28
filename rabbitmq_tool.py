@@ -20,7 +20,7 @@ class RabbitMQToolConfig(BaseModel):
         ))
     logger: Any = Field(default_factory=lambda: logging.getLogger(__name__))
 
-class RabbitMQTool(BaseTool):
+class RabbitMQTool(BaseTool, BaseModel):  # note the change in inheritance order
     def __init__(self, config: RabbitMQToolConfig):
         self.config = config.dict()  # convert the Pydantic model to a dict
 
