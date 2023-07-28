@@ -15,8 +15,7 @@ class RabbitMQToolConfig(BaseModel):
     host: str
     port: int
     virtual_host: str
-    username: str
-    password: str
+    credentials: pika.PlainCredentials
     
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
