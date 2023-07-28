@@ -1,4 +1,4 @@
-from superagi.tools.rabbitmq.rabbitmq_toolkit import RabbitMQTool
+from superagi.tools.external_tools.rabbitmq.rabbitmq_toolkit import RabbitMQTool
 
 # Create an instance of the class
 tool = RabbitMQTool()
