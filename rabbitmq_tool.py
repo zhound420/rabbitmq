@@ -20,7 +20,7 @@ class RabbitMQToolConfig(BaseModel):
         ))
     logger: Any = Field(default_factory=lambda: logging.getLogger(__name__))
 
-class RabbitMQTool(BaseTool, BaseModel):  # note the change in inheritance order
+class RabbitMQTool(BaseTool):  # note the change in inheritance order
     config: RabbitMQToolConfig
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
