@@ -25,13 +25,14 @@ class RabbitMQToolConfig(BaseSettings):
         env_file = ".env"
         env_file_encoding = 'utf-8'
 
-class RabbitMQTool(BaseTool):  
+class RabbitMQTool(BaseTool, BaseModel):  
     config: RabbitMQToolConfig
 
     def __init__(self, config: RabbitMQToolConfig):
         self.config = config
         super().__init__(description=config.description)
-         
+        self.Config = config
+
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
             self.send_natural_language_message(queue_name, message, msg_type, priority)
