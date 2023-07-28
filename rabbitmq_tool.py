@@ -1,4 +1,3 @@
-
 from typing import Any
 from superagi.tools.base_tool import BaseTool
 import pika
@@ -12,11 +11,9 @@ from pydantic import BaseSettings
 
 
 class RabbitMQToolConfig(BaseModel):
-    host: str
-    port: int
-    virtual_host: str
-    credentials: pika.PlainCredentials
-    
+    class Config:
+        arbitrary_types_allowed = True
+
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
     rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
@@ -24,12 +21,13 @@ class RabbitMQToolConfig(BaseModel):
     rabbitmq_password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
     rabbitmq_virtual_host: str = os.getenv('RABBITMQ_VIRTUAL_HOST', '/')
     rabbitmq_port: int = os.getenv('RABBITMQ_PORT', 5672)
-    connection_params: pika.ConnectionParameters = pika.ConnectionParameters(
+    connection_params: Any = pika.ConnectionParameters(
         host=rabbitmq_server,
         port=rabbitmq_port,
         virtual_host=rabbitmq_virtual_host,
         credentials=pika.PlainCredentials(rabbitmq_username, rabbitmq_password)
     )
+
 
 class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
