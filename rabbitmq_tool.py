@@ -21,10 +21,8 @@ class RabbitMQToolConfig(BaseModel):
     logger: Any = Field(default_factory=lambda: logging.getLogger(__name__))
 
 class RabbitMQTool(BaseTool):
-    config: RabbitMQToolConfig
-
     def __init__(self, config: RabbitMQToolConfig):
-        self.config = config
+        self.config = config.dict()  # convert the Pydantic model to a dict
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
@@ -35,12 +33,12 @@ class RabbitMQTool(BaseTool):
             raise ValueError(f"Unsupported action: {action}")
 
     def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
-        connection = RabbitMQConnection(self.config.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
+        connection = RabbitMQConnection(self.config['connection_params'], action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
         return connection.run()
 
     def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
         message = {
-            "sender": self.config.name,
+            "sender": self.config['name'],
             "receiver": receiver,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
