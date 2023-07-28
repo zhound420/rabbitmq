@@ -11,11 +11,11 @@ from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
 
-    class RabbitMQToolConfig(BaseModel):
-        host: str
-        port: int
-        virtual_host: str
-        credentials: pika.PlainCredentials
+class RabbitMQToolConfig(BaseModel):
+    host: str
+    port: int
+    virtual_host: str
+    credentials: pika.PlainCredentials
     
     name: str = "RabbitMQ Tool"
     description: str = "A tool for interacting with RabbitMQ"
