@@ -6,15 +6,19 @@ import logging
 import datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
+from pydantic import BaseModel, Field
 
-class RabbitMQTool(BaseTool):  # RabbitMQTool should only inherit from BaseTool
-    name = "RabbitMQ Tool"
-    description = "A tool for interacting with RabbitMQ"
-    rabbitmq_server: str
-    rabbitmq_username: str
-    rabbitmq_password: str
-    connection_params: Any
-    logger: Any
+class RabbitMQTool(BaseModel, BaseTool):  # RabbitMQTool should only inherit from BaseTool
+    name: str = Field("RabbitMQ Tool")
+    description: str = Field("A tool for interacting with RabbitMQ")
+    rabbitmq_server: str = Field(default_factory=lambda: os.getenv('RABBITMQ_SERVER', 'localhost'))
+    rabbitmq_username: str = Field(default_factory=lambda: os.getenv('RABBITMQ_USERNAME', 'guest'))
+    rabbitmq_password: str = Field(default_factory=lambda: os.getenv('RABBITMQ_PASSWORD', 'guest'))
+    connection_params: Any = Field(default_factory=lambda: pika.ConnectionParameters(
+            host=os.getenv('RABBITMQ_SERVER', 'localhost'),
+            credentials=pika.PlainCredentials(os.getenv('RABBITMQ_USERNAME', 'guest'), os.getenv('RABBITMQ_PASSWORD', 'guest'))
+        ))
+    logger: Any = Field(default_factory=lambda: logging.getLogger(__name__))
 
     def __init__(self):
         self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
