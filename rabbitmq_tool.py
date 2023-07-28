@@ -29,9 +29,9 @@ class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
 
     def __init__(self, config: RabbitMQToolConfig):
-        super().__init__(description=config.description)
         self.config = config
-
+        super().__init__(description=config.description)
+         
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         if action == "send":
             self.send_natural_language_message(queue_name, message, msg_type, priority)
