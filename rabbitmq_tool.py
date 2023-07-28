@@ -26,8 +26,6 @@ class RabbitMQToolConfig(BaseModel):
         env_file_encoding = 'utf-8'
 
 class RabbitMQTool(BaseTool):  
-    config: RabbitMQToolConfig
-
     def __init__(self, config: RabbitMQToolConfig):
         self.config = config
         super().__init__()
