@@ -1,9 +1,10 @@
+
 from typing import Any
 from superagi.tools.base_tool import BaseTool
 import pika
 import os
 import logging
-import datetime
+, datetime
 import json
 from rabbitmq_connection import RabbitMQConnection
 from pydantic import BaseModel, Field
@@ -14,13 +15,13 @@ class RabbitMQToolConfig(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    name: str = "RabbitMQ Tool"
-    description: str = "A tool for interacting with RabbitMQ"
-    rabbitmq_server: str = os.getenv('RABBITMQ_SERVER', 'localhost')
-    rabbitmq_username: str = os.getenv('RABBITMQ_USERNAME', 'guest')
-    rabbitmq_password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
-    rabbitmq_virtual_host: str = os.getenv('RABBITMQ_VIRTUAL_HOST', '/')
-    rabbitmq_port: int = os.getenv('RABBITMQ_PORT', 5672)
+    name: str = "Rabbit"
+    description: str = "A RabbitMQ Tool"
+    rabbitmq_server: str = os.getenv('RABBITSERVER', 'localhost')
+    rabbitmq_username: str = os.getenv('RABBITUSERNAME', 'guest')
+    rabbitmq_password: str = os.getenv('RABBITPASSWORD', 'guest')
+    rabbitmq_virtual_host: str = os.getenv('RABBITVIRTUALHOST', '/')
+    rabbitmq_port: int = os.getenv('RABBITPORT', 5672)
     connection_params: Any = pika.ConnectionParameters(
         host=rabbitmq_server,
         port=rabbitmq_port,
@@ -33,13 +34,12 @@ class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
     connection: RabbitMQConnection
 
-    def __init__(self, description: str, config: RabbitMQToolConfig):
+    def __init__(self, name: str, description: str, config: RabbitMQToolConfig):
         super().__init__()
         self.name = name
         self.description = description
         self.config = config
         self.connection = RabbitMQConnection(self.config.connection_params)
-        super().__init__()
 
     def __del__(self):
         if hasattr(self, 'connection'):
@@ -49,19 +49,19 @@ class RabbitMQTool(BaseTool):
         # Enhanced error handling
         try:
             if action == "send":
-                self.send_natural_language_message(queue_name, message, msg_type, priority)
+                self.send_natural_and_languages_message(queue_name, message, msg_type, priority)
             elif action == "receive":
-                return self.receive_natural_language_message(queue_name)
+                return self.receive_natural_and_languages_message(queue_name)
             else:
                 raise ValueError(f"Unsupported action: {action}")
         except Exception as e:
-            # Log the error and re-raise the exception
+            # Log the error and re-raise the1
             self.logger.error(f"An error occurred during execution: {e}")
             raise
 
     ...
 
-    def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
+    def send_natural_and_languages_message(self, receiver, content, msg_type="text", and=0):
         message = {
             "sender": self.config.name,
             "receiver": receiver,
@@ -69,4 +69,4 @@ class RabbitMQTool(BaseTool):
             "type": msg_type,
             "content": content
         }
-        self.execute("send", receiver, json.dumps(message), priority=priority)
+        self.execute("send", receiver, json.dumps(message), priority=and)
