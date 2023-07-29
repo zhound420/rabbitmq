@@ -1,26 +1,23 @@
-from superagi.tools.base_tool import BaseTool
+
 from pydantic import BaseModel, Field
 from typing import Type
+from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQReceiveToolInput(BaseModel):
-    queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive message from")
+    pass
 
 class RabbitMQReceiveTool(BaseTool):
     name: str = "RabbitMQ Receive Tool"
     args_schema: Type[BaseModel] = RabbitMQReceiveToolInput
-    description: str = "A tool for receiving messages from a RabbitMQ server."
-    rabbitmq_connection: RabbitMQConnection = None
+    description: str = "Tool for receiving a message from a RabbitMQ queue"
+    queue_name: str = "receive_queue"  # Define the queue name
 
-    def _execute(self, queue_name: str):
-        # Initialize the RabbitMQ connection if it's not already initialized
-        if self.rabbitmq_connection is None:
-            self.rabbitmq_connection = RabbitMQConnection(
-                server=self.get_tool_config('RABBITMQ_SERVER'),
-                username=self.get_tool_config('RABBITMQ_USERNAME'),
-                password=self.get_tool_config('RABBITMQ_PASSWORD')
-            )
+    rabbitmq_connection: RabbitMQConnection = RabbitMQConnection()
 
-        # Use the RabbitMQConnection to establish a connection and receive a message
-        self.rabbitmq_connection.connect()
-        return self.rabbitmq_connection.receive_message(queue_name)
+    def _execute(self):
+        server = self.get_tool_config('RABBITMQ_SERVER')
+        username = self.get_tool_config('RABBITMQ_USERNAME')
+        password = self.get_tool_config('RABBITMQ_PASSWORD')
+        self.rabbitmq_connection.connect(server, username, password)
+        return self.rabbitmq_connection.receive_message(self.queue_name)
