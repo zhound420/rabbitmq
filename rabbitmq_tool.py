@@ -1,72 +1,53 @@
-
-from typing import Any
+from abc import ABC
+from typing import List
 from superagi.tools.base_tool import BaseTool
 import pika
 import os
 import logging
 import datetime
 import json
-from rabbitmq_connection import RabbitMQConnection
-from pydantic import BaseModel, Field
-from pydantic import BaseSettings
+from superagi.tools.rabbitmq.rabbitmq_connection import RabbitMQConnection
 
+class RabbitMQTool(BaseTool, ABC):
+    name = "RabbitMQ Tool"
+    description = "A tool for interacting with RabbitMQ"
 
-class RabbitMQToolConfig(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
+    def __init__(self):
+        self.rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
+        self.rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
+        self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
+        self.connection_params = pika.ConnectionParameters(
+            host=self.rabbitmq_server,
+            credentials=pika.PlainCredentials(self.rabbitmq_username, self.rabbitmq_password)
+        )
+        self.logger = logging.getLogger(__name__)
 
-    name: str = "Rabbit"
-    description: str = "A RabbitMQ Tool"
-    rabbitmq_server: str = os.getenv('RABBITSERVER', 'localhost')
-    rabbitmq_username: str = os.getenv('RABBITUSERNAME', 'guest')
-    rabbitmq_password: str = os.getenv('RABBITPASSWORD', 'guest')
-    rabbitmq_virtual_host: str = os.getenv('RABBITVIRTUALHOST', '/')
-    rabbitmq_port: int = os.getenv('RABBITPORT', 5672)
-    connection_params: Any = pika.ConnectionParameters(
-        host=rabbitmq_server,
-        port=rabbitmq_port,
-        virtual_host=rabbitmq_virtual_host,
-        credentials=pika.PlainCredentials(rabbitmq_username, rabbitmq_password)
-    )
+    def execute(self, action, queue_name, message=None, persistent=False, priority=0, callback=None, consumer_tag=None, delivery_tag=None):
+        """
+        Execute a RabbitMQ operation.
+        
+        The operation can be either "send", "receive", "create_queue", "delete_queue", "add_consumer", "remove_consumer", or "send_ack". 
+        """
+        connection = RabbitMQConnection(self.connection_params, action, queue_name, message, persistent, priority, callback, consumer_tag, delivery_tag)
+        connection.run()
 
-
-class RabbitMQTool(BaseTool):
-    config: RabbitMQToolConfig
-    connection: RabbitMQConnection
-
-    def __init__(self, name: str, description: str, config: RabbitMQToolConfig):
-        super().__init__()
-        self.name = name
-        self.description = description
-        self.config = config
-        self.connection = RabbitMQConnection(self.config.connection_params)
-
-    def __del__(self):
-        if hasattr(self, 'connection'):
-            self.connection.close()
-
-    def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
-        # Enhanced error handling
-        try:
-            if action == "send":
-                self.send_natural_and_languages_message(queue_name, message, msg_type, priority)
-            elif action == "receive":
-                return self.receive_natural_and_languages_message(queue_name)
-            else:
-                raise ValueError(f"Unsupported action: {action}")
-        except Exception as e:
-            # Log the error and re-raise the1
-            self.logger.error(f"An error occurred during execution: {e}")
-            raise
-
-    ...
-
-    def send_natural_and_languages_message(self, receiver, content, msg_type="text", and=0):
+    def send_natural_language_message(self, receiver, content, msg_type="text", priority=0):
+        """
+        Send a natural language message to a specified queue (receiver).
+        """
         message = {
-            "sender": self.config.name,
+            "sender": self.name,
             "receiver": receiver,
             "timestamp": datetime.datetime.now().isoformat(),
             "type": msg_type,
             "content": content
         }
-        self.execute("send", receiver, json.dumps(message), priority=and)
+        self.execute("send", receiver, json.dumps(message), priority=priority)
+
+    def receive_natural_language_message(self, queue_name):
+        """
+        Receive a natural language message from a specified queue.
+        """
+        raw_message = self.execute("receive", queue_name)
+        message = json.loads(raw_message)
+        return message["content"]

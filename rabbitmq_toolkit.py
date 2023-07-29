@@ -1,8 +1,7 @@
 from abc import ABC
 from typing import List
-
 from superagi.tools.base_tool import BaseTool, BaseToolkit
-from rabbitmq_tool_final import RabbitMQTool  # Import from the final version of the file
+from superagi.tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 
 class RabbitMQToolkit(BaseToolkit, ABC):
     name: str = "RabbitMQ Toolkit"
@@ -15,8 +14,6 @@ class RabbitMQToolkit(BaseToolkit, ABC):
         return [
             "RABBITMQ_SERVER",
             "RABBITMQ_USERNAME",
-            "RABBITMQ_PASSWORD",
-            "RABBITMQ_VIRTUAL_HOST",
-            "RABBITMQ_PORT"
+            "RABBITMQ_PASSWORD"
             # Add more config keys specific to your project
         ]
