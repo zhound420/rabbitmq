@@ -8,7 +8,7 @@ class RabbitMQConnection:
         self.channel = None
 
     def connect(self):
-        rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
+        rabbitmq_server = os.getenv('RABBITMQ_SERVER', '192.168.4.194')
         rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
         rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
