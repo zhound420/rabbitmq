@@ -1,11 +1,10 @@
-
 from superagi.tools.base_tool import BaseTool
 from pydantic import BaseModel, Field
 from typing import Type
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQReceiveToolInput(BaseModel):
-    queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive messages from")
+    queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive message from")
 
 class RabbitMQReceiveTool(BaseTool):
     name: str = "RabbitMQ Receive Tool"
