@@ -1,32 +1,34 @@
 
-from abc import ABC, abstractmethod
+import abc
 import pika
+from typing import Optional
 
-class RabbitMQConnection(ABC):
-    def __init__(self):
-        self.connection = None
-        self.channel = None
 
-    def connect(self, server: str, username: str, password: str):
-        credentials = pika.PlainCredentials(username, password)
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(server, 5672, '/', credentials))
+class RabbitMQConnection(abc.ABC):
+    connection: Optional[pika.BlockingConnection] = None
+    channel: Optional[pika.channel.Channel] = None
+
+    def __init__(self, server: str, username: str, password: str):
+        self.server = server
+        self.username = username
+        self.password = password
+
+    def open_connection(self):
+        credentials = pika.PlainCredentials(self.username, self.password)
+        parameters = pika.ConnectionParameters(self.server, credentials=credentials)
+        self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
 
-    def send_message(self, queue_name: str, message: str, persistent: int, priority: int):
-        self.channel.queue_declare(queue=queue_name, durable=True)
-        properties = pika.BasicProperties(delivery_mode=persistent, priority=priority)
-        self.channel.basic_publish(exchange='', routing_key=queue_name, body=message, properties=properties)
-
-    def receive_message(self, queue_name: str):
-        self.channel.queue_declare(queue=queue_name, durable=True)
-        method_frame, header_frame, body = self.channel.basic_get(queue=queue_name)
-        if method_frame:
-            self.channel.basic_ack(method_frame.delivery_tag)
-            return body.decode()
-        else:
-            return None
-
-    @abstractmethod
     def close_connection(self):
-        if self.connection:
+        if self.connection is not None and self.connection.is_open:
             self.connection.close()
+            self.connection = None
+            self.channel = None
+
+    @abc.abstractmethod
+    def send_message(self, queue_name: str, message: str, persistent: int, priority: int):
+        pass
+
+    @abc.abstractmethod
+    def receive_message(self, queue_name: str):
+        pass
