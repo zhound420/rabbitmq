@@ -35,13 +35,14 @@ class RabbitMQTool(BaseTool):
 
     def __init__(self, config: RabbitMQToolConfig):
         super().__init__()
+        super().__init__()
         self.config = config
         self.connection = RabbitMQConnection(self.config.connection_params)
         super().__init__()
 
     def __del__(self):
         if hasattr(self, 'connection'):
-        self.connection.close()
+            self.connection.close()
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
         # Enhanced error handling
