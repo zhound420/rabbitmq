@@ -1,4 +1,4 @@
-from superagi.tools.base_toolkit import BaseToolkit
+from superagi.tools.base_tool import BaseToolkit
 from typing import List
 from rabbitmq_send_tool import RabbitMQSendTool
 from rabbitmq_receive_tool import RabbitMQReceiveTool
