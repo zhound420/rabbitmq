@@ -1,16 +1,16 @@
 
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials
-import os
+from superagi.tools.base_tool import BaseTool
 
-class RabbitMQConnection:
+class RabbitMQConnection(BaseTool):
     def __init__(self):
         self.connection = None
         self.channel = None
 
     def connect(self):
-        rabbitmq_server = os.getenv('RABBITMQ_SERVER', '192.168.4.194')
-        rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
-        rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
+        rabbitmq_server = self.get_tool_config('RABBITMQ_SERVER')
+        rabbitmq_username = self.get_tool_config('RABBITMQ_USERNAME')
+        rabbitmq_password = self.get_tool_config('RABBITMQ_PASSWORD')
 
         connection_params = ConnectionParameters(
             host=rabbitmq_server,
