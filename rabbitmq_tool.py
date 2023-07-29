@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
 
-class RabbitMQToolConfig(BaseModel):
+class RabbitMQToolConfig():
     class Config:
         arbitrary_types_allowed = True
 
