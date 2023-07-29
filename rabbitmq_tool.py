@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from pydantic import BaseSettings
 
 
-class RabbitMQToolConfig():
+class RabbitMQToolConfig(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -34,12 +34,13 @@ class RabbitMQTool(BaseTool):
     connection: RabbitMQConnection
 
     def __init__(self, config: RabbitMQToolConfig):
+        super().__init__()
         self.config = config
         self.connection = RabbitMQConnection(self.config.connection_params)
         super().__init__()
 
     def __del__(self):
-        # Close the connection when the tool is destroyed
+        if hasattr(self, 'connection'):
         self.connection.close()
 
     def _execute(self, action, queue_name, message=None, msg_type="text", priority=0):
