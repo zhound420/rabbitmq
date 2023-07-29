@@ -2,7 +2,7 @@
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials
 from superagi.tools.base_tool import BaseTool
 
-class RabbitMQConnection(BaseTool):
+class RabbitMQConnection:
     def __init__(self):
         self.connection = None
         self.channel = None
