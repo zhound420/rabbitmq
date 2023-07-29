@@ -33,7 +33,9 @@ class RabbitMQTool(BaseTool):
     config: RabbitMQToolConfig
     connection: RabbitMQConnection
 
-    def __init__(self, config: RabbitMQToolConfig):
+    def __init__(self, description: str, config: RabbitMQToolConfig):
+        super().__init__()
+        self.description = description
         super().__init__()
         super().__init__()
         self.config = config
