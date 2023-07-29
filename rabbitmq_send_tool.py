@@ -1,29 +1,34 @@
-from superagi.tools.base_tool import BaseTool
 from pydantic import BaseModel, Field
 from typing import Type
+from superagi.tools.base_tool import BaseTool
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQSendToolInput(BaseModel):
-    queue_name: str = Field(..., description="Name of the RabbitMQ queue to send message to")
     message: str = Field(..., description="Message to be sent")
-    persistent: int = Field(..., description="Message persistence. 1 for non-persistent, 2 for persistent")
-    priority: int = Field(..., description="Message priority")
+    persistent: int = Field(1, description="Should the message be persistent? 1 for yes, 0 for no")
+    priority: int = Field(0, description="Priority of the message")
 
-class RabbitMQSendTool(BaseTool):
+class RabbitMQSendTool(RabbitMQConnection, BaseTool):
     name: str = "RabbitMQ Send Tool"
     args_schema: Type[BaseModel] = RabbitMQSendToolInput
-    description: str = "A tool for sending messages to a RabbitMQ server."
-    rabbitmq_connection: RabbitMQConnection = None
+    description: str = "Tool for sending a message to a RabbitMQ queue"
+    queue_name: str = "conversation_queue"  # Define the queue name
 
-    def _execute(self, queue_name: str, message: str, persistent: int, priority: int):
-        # Initialize the RabbitMQ connection if it's not already initialized
-        if self.rabbitmq_connection is None:
-            self.rabbitmq_connection = RabbitMQConnection(
-                server=self.get_tool_config('RABBITMQ_SERVER'),
-                username=self.get_tool_config('RABBITMQ_USERNAME'),
-                password=self.get_tool_config('RABBITMQ_PASSWORD')
-            )
-
-        # Use the RabbitMQConnection to establish a connection and send a message
-        self.rabbitmq_connection.connect()
-        self.rabbitmq_connection.send_message(queue_name, message, persistent, priority)
+    def _execute(self, message: str, persistent: int, priority: int):
+        self.send_message(self.queue_name, message, persistent, priority)
+        
+    def send_message(self, queue_name: str, message: str, persistent: int, priority: int):
+        self.channel.queue_declare(queue=queue_name, durable=True)
+        properties = pika.BasicProperties(
+            delivery_mode=persistent,
+            priority=priority
+        )
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queue_name,
+            body=message,
+            properties=properties
+        )
+        
+    def receive_message(self):
+        pass  # This method is not used in this class, but it's required by the parent class
