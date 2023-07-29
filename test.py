@@ -1,25 +1,19 @@
-from pika import BlockingConnection, ConnectionParameters, PlainCredentials
-import os
 
-def test_connection():
-    # Retrieve RabbitMQ server details from environment variables
-    rabbitmq_server = os.getenv('RABBITMQ_SERVER', 'localhost')
-    rabbitmq_username = os.getenv('RABBITMQ_USERNAME', 'guest')
-    rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
+from rabbitmq_toolkit import RabbitMQToolkit
 
-    # Set up the connection parameters
-    connection_params = ConnectionParameters(
-        host=rabbitmq_server,
-        credentials=PlainCredentials(rabbitmq_username, rabbitmq_password)
-    )
+def test_send_and_receive():
+    toolkit = RabbitMQToolkit()
+    send_tool = toolkit.get_tools()[0]
+    receive_tool = toolkit.get_tools()[1]
 
-    # Test the connection to the RabbitMQ server
-    try:
-        connection = BlockingConnection(connection_params)
-        connection.close()
-        print("Connection to RabbitMQ server successful.")
-    except Exception as e:
-        print(f"Failed to connect to RabbitMQ server: {e}")
+    # Send a test message
+    send_tool._execute('test_queue', 'Hello, world!', 2, 0)
 
-if __name__ == '__main__':
-    test_connection()
+    # Receive the test message
+    message = receive_tool._execute('test_queue')
+
+    # Check that the received message matches the sent message
+    assert message == 'Hello, world!', f"Expected 'Hello, world!', but got {message}"
+
+if __name__ == "__main__":
+    test_send_and_receive()
