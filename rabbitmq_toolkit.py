@@ -1,19 +1,11 @@
-from abc import ABC
-from typing import List
-from superagi.tools.base_tool import BaseTool, BaseToolkit
-from superagi.tools.external_tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 
-class RabbitMQToolkit(BaseToolkit, ABC):
-    name: str = "RabbitMQ Toolkit"
-    description: str = "Toolkit containing tools for interacting with RabbitMQ"
-    
-    def get_tools(self) -> List[BaseTool]:
-        return [RabbitMQTool()]
+from superagi.tools.base_tool import BaseToolkit
+from rabbitmq_send_tool import RabbitMQSendTool
+from rabbitmq_receive_tool import RabbitMQReceiveTool
 
-    def get_env_keys(self) -> List[str]:
-        return [
-            "RABBITMQ_SERVER",
-            "RABBITMQ_USERNAME",
-            "RABBITMQ_PASSWORD"
-            # Add more config keys specific to your project
-        ]
+class RabbitMQToolkit(BaseToolkit):
+    def get_tools(self):
+        return [RabbitMQSendTool(), RabbitMQReceiveTool()]
+
+    def get_env_keys(self):
+        return ["RABBITMQ_SERVER", "RABBITMQ_USERNAME", "RABBITMQ_PASSWORD"]
