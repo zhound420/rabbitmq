@@ -1,9 +1,8 @@
-
 import pika
-from abc import ABC, abstractmethod
+from pika import BlockingConnection, ConnectionParameters, PlainCredentials
 
-class RabbitMQConnection(ABC):
-    def __init__(self, server="localhost", username="guest", password="guest"):
+class RabbitMQConnection:
+    def __init__(self, server: str, username: str, password: str):
         self.server = server
         self.username = username
         self.password = password
@@ -11,15 +10,23 @@ class RabbitMQConnection(ABC):
         self.channel = None
 
     def connect(self):
-        credentials = pika.PlainCredentials(self.username, self.password)
-        parameters = pika.ConnectionParameters(self.server, credentials=credentials)
-        self.connection = pika.BlockingConnection(parameters)
+        credentials = PlainCredentials(self.username, self.password)
+        parameters = ConnectionParameters(self.server, credentials=credentials)
+        self.connection = BlockingConnection(parameters)
         self.channel = self.connection.channel()
 
-    @abstractmethod
-    def send_message(self, queue_name: str, message: str, persistent: int, priority: int):
-        pass
+    def send_message(self, queue_name, message, persistent, priority):
+        # Declare the queue before sending a message
+        self.channel.queue_declare(queue=queue_name, durable=True)
+        properties = pika.BasicProperties(delivery_mode=persistent, priority=priority)
+        self.channel.basic_publish(exchange='', routing_key=queue_name, body=message, properties=properties)
 
-    @abstractmethod
-    def receive_message(self, queue_name: str):
-        pass
+    def receive_message(self, queue_name):
+        # Declare the queue before receiving a message
+        self.channel.queue_declare(queue=queue_name, durable=True)
+        method_frame, header_frame, body = self.channel.basic_get(queue_name)
+        if method_frame:
+            self.channel.basic_ack(method_frame.delivery_tag)
+            return body.decode()
+        else:
+            return None
