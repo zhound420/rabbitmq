@@ -5,18 +5,23 @@ from typing import Type
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQReceiveToolInput(BaseModel):
-    pass
+    queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive messages from")
 
 class RabbitMQReceiveTool(BaseTool):
     name: str = "RabbitMQ Receive Tool"
     args_schema: Type[BaseModel] = RabbitMQReceiveToolInput
-    description: str = "Tool for receiving a message from a RabbitMQ queue"
-    queue_name: str = "conversation_queue"  # Define the queue name
+    description: str = "A tool for receiving messages from a RabbitMQ server."
+    rabbitmq_connection: RabbitMQConnection = None
 
-    rabbitmq_connection: RabbitMQConnection = RabbitMQConnection()
+    def _execute(self, queue_name: str):
+        # Initialize the RabbitMQ connection if it's not already initialized
+        if self.rabbitmq_connection is None:
+            self.rabbitmq_connection = RabbitMQConnection(
+                server=self.get_tool_config('RABBITMQ_SERVER'),
+                username=self.get_tool_config('RABBITMQ_USERNAME'),
+                password=self.get_tool_config('RABBITMQ_PASSWORD')
+            )
 
-    def _execute(self):
-        # We no longer need to call the connect() method
-        # self.rabbitmq_connection.connect()
-        
-        return self.rabbitmq_connection.receive_message(self.queue_name)
+        # Use the RabbitMQConnection to establish a connection and receive a message
+        self.rabbitmq_connection.connect()
+        return self.rabbitmq_connection.receive_message(queue_name)
