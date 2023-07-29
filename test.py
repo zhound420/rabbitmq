@@ -1,4 +1,4 @@
-from superagi.tools.external_tools.rabbitmq.rabbitmq_tool import RabbitMQTool, RabbitMQToolConfig
+from superagi.tools.external_tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 
 # Create a configuration instance
 config = RabbitMQToolConfig()
