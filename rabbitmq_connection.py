@@ -1,3 +1,4 @@
+import pika
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials
 
 class RabbitMQConnection:
