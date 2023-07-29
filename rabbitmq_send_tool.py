@@ -1,4 +1,4 @@
-
+from typing import Type
 from superagi.tools.base_tool import BaseTool
 from pydantic import BaseModel, Field
 from rabbitmq_connection import RabbitMQConnection
