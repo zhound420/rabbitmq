@@ -1,8 +1,5 @@
 from superagi.tools.external_tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 
-# Create a configuration instance
-config = RabbitMQToolConfig()
-
 # Create an instance of the class
 tool = RabbitMQTool(
     description="test rabbitmq tool",
