@@ -3,7 +3,6 @@ from superagi.tools.external_tools.rabbitmq.rabbitmq_tool import RabbitMQTool
 # Create an instance of the class
 tool = RabbitMQTool(
     description="test rabbitmq tool",
-    config=config,
     name="test rabbitmq tool"
     )
 
