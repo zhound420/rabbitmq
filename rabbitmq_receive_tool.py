@@ -24,4 +24,5 @@ class RabbitMQReceiveTool(BaseTool):
 
         # Use the RabbitMQConnection to establish a connection and receive a message
         self.rabbitmq_connection.connect()
-        return self.rabbitmq_connection.receive_message(f"{agent_id}_receive")
+        message = self.rabbitmq_connection.receive_message(f"{agent_id}_receive")
+        return message if message is not None else "No messages in the queue"
