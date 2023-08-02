@@ -10,10 +10,10 @@ class RabbitMQReceiveToolInput(BaseModel):
 class RabbitMQReceiveTool(BaseTool):
     name: str = "RabbitMQ Receive Tool"
     args_schema: Type[BaseModel] = RabbitMQReceiveToolInput
-    description: str = "A tool for receiving messages from a RabbitMQ server."
-    rabbitmq_connection: RabbitMQConnection = None
+    description: str = "This tool receives a message from a RabbitMQ queue."
 
-    def _execute(self, agent_id: str, queue_name: str):
+    def _execute(self, ai_name: str):
+        queue_name = f"{ai_name}_queue"
         # Initialize the RabbitMQ connection if it's not already initialized
         if self.rabbitmq_connection is None:
             self.rabbitmq_connection = RabbitMQConnection(
