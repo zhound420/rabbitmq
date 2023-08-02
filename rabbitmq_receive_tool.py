@@ -4,7 +4,7 @@ from typing import Type
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQReceiveToolInput(BaseModel):
-    agent_id: str = Field(..., description="Identifier of the receiving agent"),
+    agent_id: str
     queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive message from")
 
 class RabbitMQReceiveTool(BaseTool):
