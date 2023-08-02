@@ -2,7 +2,7 @@ from superagi.tools.base_tool import BaseTool
 from pydantic import BaseModel, Field
 from typing import Type
 from rabbitmq_connection import RabbitMQConnection
-
+from superagi.agent.super_agi import SuperAgi
 
 class RabbitMQSendToolInput(BaseModel):
     ai_name: str
