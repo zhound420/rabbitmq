@@ -29,5 +29,5 @@ class RabbitMQSendTool(BaseTool):
 
         # Use the RabbitMQConnection to establish a connection and send a message
         self.rabbitmq_connection.connect()
-        return self.rabbitmq_connection.send_message(f"{agent_id}_queue", message, persistent, priority) or "Message sent" or "Message sent" or "Message sent"
+        return self.rabbitmq_connection.send_message(f"{ai_name}_queue", message, persistent, priority) or "Message sent" or "Message sent" or "Message sent"
         
