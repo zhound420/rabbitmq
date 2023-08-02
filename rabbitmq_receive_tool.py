@@ -4,6 +4,7 @@ from typing import Type
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQReceiveToolInput(BaseModel):
+    agent_id: str = Field(..., description="Identifier of the receiving agent"),
     queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive message from")
 
 class RabbitMQReceiveTool(BaseTool):
@@ -12,7 +13,7 @@ class RabbitMQReceiveTool(BaseTool):
     description: str = "A tool for receiving messages from a RabbitMQ server."
     rabbitmq_connection: RabbitMQConnection = None
 
-    def _execute(self, queue_name: str):
+    def _execute(self, agent_id: str, queue_name: str):
         # Initialize the RabbitMQ connection if it's not already initialized
         if self.rabbitmq_connection is None:
             self.rabbitmq_connection = RabbitMQConnection(
@@ -23,4 +24,4 @@ class RabbitMQReceiveTool(BaseTool):
 
         # Use the RabbitMQConnection to establish a connection and receive a message
         self.rabbitmq_connection.connect()
-        return self.rabbitmq_connection.receive_message(queue_name)
+        return self.rabbitmq_connection.receive_message(f"{agent_id}_receive")
