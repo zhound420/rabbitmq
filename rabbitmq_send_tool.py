@@ -4,6 +4,7 @@ from typing import Type
 from rabbitmq_connection import RabbitMQConnection
 
 class RabbitMQSendToolInput(BaseModel):
+    agent_id: str = Field(..., description="Identifier of the sending agent"),
     queue_name: str = Field(..., description="Name of the RabbitMQ queue to send message to")
     message: str = Field(..., description="Message to be sent")
     persistent: int = Field(..., description="Message persistence. 1 for non-persistent, 2 for persistent")
@@ -15,7 +16,7 @@ class RabbitMQSendTool(BaseTool):
     description: str = "A tool for sending messages to a RabbitMQ server."
     rabbitmq_connection: RabbitMQConnection = None
 
-    def _execute(self, queue_name: str, message: str, persistent: int, priority: int):
+    def _execute(self, agent_id: str, queue_name: str, message: str, persistent: int, priority: int):
         # Initialize the RabbitMQ connection if it's not already initialized
         if self.rabbitmq_connection is None:
             self.rabbitmq_connection = RabbitMQConnection(
@@ -26,5 +27,5 @@ class RabbitMQSendTool(BaseTool):
 
         # Use the RabbitMQConnection to establish a connection and send a message
         self.rabbitmq_connection.connect()
-        self.rabbitmq_connection.send_message(queue_name, message, persistent, priority)
+        self.rabbitmq_connection.send_message(f"{agent_id}_send", message, persistent, priority)
         
