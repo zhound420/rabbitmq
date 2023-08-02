@@ -5,7 +5,7 @@ from rabbitmq_connection import RabbitMQConnection
 
 
 class RabbitMQSendToolInput(BaseModel):
-    agent_id: str
+    ai_name: str
     queue_name: str = Field(..., description="Name of the RabbitMQ queue to send message to")
     message: str = Field(..., description="Message to be sent")
     persistent: int = Field(..., description="Message persistence. 1 for non-persistent, 2 for persistent")
