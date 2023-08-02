@@ -3,7 +3,6 @@ import pika
 import json
 from typing import Any, Type
 from pydantic import BaseModel, Field
-from superagi.agent.super_agi import SuperAGI
 from superagi.tools.base_tool import BaseTool
 
 class RabbitMQSendToolInput(BaseModel):
