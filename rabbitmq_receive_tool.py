@@ -1,29 +1,33 @@
-from superagi.tools.base_tool import BaseTool
+
+import pika
+import json
+from typing import Any
 from pydantic import BaseModel, Field
-from typing import Type
-from rabbitmq_connection import RabbitMQConnection
-from superagi.agent.super_agi import SuperAgi
+
+from superagi.tools.base_tool import BaseTool
 
 class RabbitMQReceiveToolInput(BaseModel):
-    agent_id: str
-    queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive message from")
+    queue_name: str = Field(..., description="Name of the RabbitMQ queue to receive the message from")
 
 class RabbitMQReceiveTool(BaseTool):
     name: str = "RabbitMQ Receive Tool"
     args_schema: Type[BaseModel] = RabbitMQReceiveToolInput
-    description: str = "This tool receives a message from a RabbitMQ queue."
+    description: str = "This tool receives a message from a specified RabbitMQ queue"
 
-    def _execute(self, ai_name: str):
-        queue_name = f"{ai_name}_queue"
-        # Initialize the RabbitMQ connection if it's not already initialized
-        if self.rabbitmq_connection is None:
-            self.rabbitmq_connection = RabbitMQConnection(
-                server=self.get_tool_config('RABBITMQ_SERVER'),
-                username=self.get_tool_config('RABBITMQ_USERNAME'),
-                password=self.get_tool_config('RABBITMQ_PASSWORD')
-            )
+    def __init__(self, ai_name):
+        super().__init__()
+        self.ai_name = ai_name
 
-        # Use the RabbitMQConnection to establish a connection and receive a message
-        self.rabbitmq_connection.connect()
-        message = self.rabbitmq_connection.receive_message(f"{ai_name}_queue") or "No messages in the queue" or "No messages in the queue"
-        return message or "No messages in the queue"
+    def _execute(self, queue_name: str = None):
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        channel = connection.channel()
+
+        queue_name = self.ai_name + "_" + queue_name
+        channel.queue_declare(queue=queue_name)
+
+        method_frame, header_frame, body = channel.basic_get(queue=queue_name)
+        if method_frame:
+            channel.basic_ack(method_frame.delivery_tag)
+            return json.loads(body)
+        else:
+            return "No messages in the queue"
