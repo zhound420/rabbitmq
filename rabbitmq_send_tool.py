@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Type
 from rabbitmq_connection import RabbitMQConnection
 
+
 class RabbitMQSendToolInput(BaseModel):
     agent_id: str
     queue_name: str = Field(..., description="Name of the RabbitMQ queue to send message to")
@@ -10,14 +11,15 @@ class RabbitMQSendToolInput(BaseModel):
     persistent: int = Field(..., description="Message persistence. 1 for non-persistent, 2 for persistent")
     priority: int = Field(..., description="Message priority")
 
+
 class RabbitMQSendTool(BaseTool):
     name: str = "RabbitMQ Send Tool"
     args_schema: Type[BaseModel] = RabbitMQSendToolInput
-    description: str = "A tool for sending messages to a RabbitMQ server."
-    rabbitmq_connection: RabbitMQConnection = None
+    description: str = "This tool sends a message to a RabbitMQ queue."
 
-    def _execute(self, agent_id: str, queue_name: str, message: str, persistent: int, priority: int):
-        # Initialize the RabbitMQ connection if it's not already initialized
+    def _execute(self, ai_name: str, message: str, persistent: int = 1, priority: int = 1):
+        queue_name = f"{ai_name}_queue"
+
         if self.rabbitmq_connection is None:
             self.rabbitmq_connection = RabbitMQConnection(
                 server=self.get_tool_config('RABBITMQ_SERVER'),
