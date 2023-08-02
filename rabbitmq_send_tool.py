@@ -1,3 +1,4 @@
+
 import pika
 import json
 import os
@@ -15,14 +16,12 @@ class RabbitMQSendTool(BaseTool):
     description: str = "This tool sends a message to a specified RabbitMQ queue"
 
     def _execute(self, message: str = None, queue_name: str = None):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv('RABBITMQ_SERVER')))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+            host=os.getenv('RABBITMQ_SERVER'),
+            credentials=pika.PlainCredentials(os.getenv('RABBITMQ_USERNAME'), os.getenv('RABBITMQ_PASSWORD'))
+        ))
         channel = connection.channel()
-
-        queue_name = queue_name
         channel.queue_declare(queue=queue_name)
-
         channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(message))
-
         connection.close()
-
         return "Sent"
