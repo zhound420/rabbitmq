@@ -24,5 +24,5 @@ class RabbitMQReceiveTool(BaseTool):
 
         # Use the RabbitMQConnection to establish a connection and receive a message
         self.rabbitmq_connection.connect()
-        message = self.rabbitmq_connection.receive_message("SuperAGI") or "No messages in the queue"
+        message = self.rabbitmq_connection.receive_message(f"{agent_id}_queue") or "No messages in the queue" or "No messages in the queue"
         return message or "No messages in the queue"
