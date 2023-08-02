@@ -19,7 +19,7 @@ class RabbitMQSendTool(BaseTool):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
 
-        queue_name = self.ai_name + "_" + queue_name
+        queue_name = queue_name
         channel.queue_declare(queue=queue_name)
 
         channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(message))
