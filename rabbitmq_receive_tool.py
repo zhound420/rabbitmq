@@ -1,4 +1,3 @@
-
 import pika
 import json
 from typing import Any, Type
