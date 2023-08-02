@@ -7,6 +7,10 @@ class RabbitMQToolkit(BaseToolkit):
     name: str = "RabbitMQ Toolkit"
     description: str = "A toolkit for sending and receiving messages using RabbitMQ."
 
+    def __init__(self, ai_name: str):
+        super().__init__()
+        self.ai_name = ai_name
+
     def get_tools(self) -> List:
         return [RabbitMQSendTool(), RabbitMQReceiveTool()]
 
