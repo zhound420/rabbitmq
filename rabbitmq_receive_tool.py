@@ -13,9 +13,6 @@ class RabbitMQReceiveTool(BaseTool):
     args_schema: Type[BaseModel] = RabbitMQReceiveToolInput
     description: str = "This tool receives a message from a specified RabbitMQ queue"
 
-    def __init__(self, ai_name):
-        super().__init__()
-        self.ai_name = ai_name
 
     def _execute(self, queue_name: str = None):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

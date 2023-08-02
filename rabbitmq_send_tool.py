@@ -15,9 +15,6 @@ class RabbitMQSendTool(BaseTool):
     args_schema: Type[BaseModel] = RabbitMQSendToolInput
     description: str = "This tool sends a message to a specified RabbitMQ queue"
 
-    def __init__(self, ai_name):
-        super().__init__()
-        self.ai_name = ai_name
 
     def _execute(self, message: str = None, queue_name: str = None):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
