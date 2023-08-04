@@ -17,7 +17,7 @@ class RabbitMQReceiveTool(BaseTool):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
 
-        queue_name = self.name + "_" + queue_name
+        #queue_name = self.name + "_" + queue_name
         channel.queue_declare(queue=queue_name)
 
         method_frame, header_frame, body = channel.basic_get(queue=queue_name)
