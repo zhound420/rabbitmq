@@ -16,7 +16,7 @@ class RabbitMQSendTool(BaseTool):
 
 
     def _execute(self, message: str = None, queue_name: str = None):
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters('192.168.4.194'))
         channel = connection.channel()
 
         queue_name = self.ai_name + "_" + queue_name
