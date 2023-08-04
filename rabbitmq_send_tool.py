@@ -4,6 +4,7 @@ import json
 from typing import Any, Type
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
+from superagi.agent.super_agi import SuperAGI
 
 class RabbitMQSendToolInput(BaseModel):
     message: Any = Field(..., description="Message to be sent")
