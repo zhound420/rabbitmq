@@ -4,7 +4,6 @@ import json
 from typing import Any, Type
 from pydantic import BaseModel, Field
 from superagi.tools.base_tool import BaseTool
-from superagi.agent.super_agi import SuperAgi
 
 class RabbitMQSendToolInput(BaseModel):
     message: Any = Field(..., description="Message to be sent")
@@ -20,7 +19,7 @@ class RabbitMQSendTool(BaseTool):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
 
-        queue_name = self.ai_name + "_" + queue_name
+        queue_name = self.name + "_" + queue_name
         channel.queue_declare(queue=queue_name)
 
         channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(message))
